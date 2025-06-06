@@ -1,0 +1,6 @@
+@EazyRent_HostAddress = http://localhost:5127
+
+GET {{EazyRent_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
