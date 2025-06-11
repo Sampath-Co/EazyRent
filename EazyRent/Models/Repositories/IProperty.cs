@@ -1,4 +1,5 @@
 ﻿using EazyRent.Models.DTO;
+using Microsoft.AspNetCore.Mvc.Diagnostics;
 
 namespace EazyRent.Models.Repositories
 {
@@ -7,7 +8,7 @@ namespace EazyRent.Models.Repositories
         PropertyDetailsDTO DisplayOwnerProperty(int ownerId);
         Task<bool> AddPropertyAsync(string ownerEmail, PropertyDetailsDTO dto);
         Task<PropertyDetailsDTO> GetPropertyByIdAsync(int propertyId);
-        Task<IEnumerable<PropertyDetailsDTO>> GetAllPropertiesAsync();
+        Task<IEnumerable<PropertyDetailsDTO>> GetAllPropertiesAsync( string? filterOn = null, string? filterQuery = null, decimal? filterRent = null);
         Task<IEnumerable<PropertyDetailsDTO>> GetPropertiesForOwnerAsync(int ownerId);
         Task<bool> UpdatePropertyAsync(int propertyId, int ownerId, PropertyDetailsDTO updatedPropertyDetails);
         Task<bool> DeletePropertyAsync(int propertyId, int ownerId);

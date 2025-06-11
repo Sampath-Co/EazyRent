@@ -15,7 +15,9 @@ public partial class MaintenanceRequest
 
     public string? Status { get; set; }
 
+
     public virtual Property? Property { get; set; }
 
     public virtual User? Tenant { get; set; }
+
 }

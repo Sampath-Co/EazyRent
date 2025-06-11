@@ -1,10 +1,13 @@
 ﻿using EazyRent.Data;
+using EazyRent.Mappings;
 using EazyRent.Models.Repositories;
 using EazyRent.Models.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Net;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -76,6 +79,9 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
 builder.Services.AddScoped<IProperty, PropertyRepository>();
 builder.Services.AddScoped<ILease, LeaseRepository>();
+builder.Services.AddScoped<IPayment, PaymentRepository>();
+builder.Services.AddScoped<IMaintenanceRequestRepository, MaintenanceRepository>();
+builder.Services.AddAutoMapper(typeof(MappingProfiles));
 
 var app = builder.Build();
 
@@ -90,6 +96,28 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Add global exception handler middleware
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+        context.Response.ContentType = "application/json";
+
+        var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
+        if (exceptionHandlerPathFeature?.Error != null)
+        {
+            var errorResponse = new
+            {
+                Message = "An unexpected error occurred.",
+                Details = exceptionHandlerPathFeature.Error.Message
+            };
+
+            await context.Response.WriteAsJsonAsync(errorResponse);
+        }
+    });
+});
 
 app.MapControllers();
 

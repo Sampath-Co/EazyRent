@@ -2,7 +2,6 @@
 using EazyRent.Models.DTO;
 using EazyRent.Models.Repositories;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EazyRent.Controllers
@@ -17,32 +16,30 @@ namespace EazyRent.Controllers
             _property = property;
         }
 
-        [Authorize(Roles = "Owner")]
-        [HttpGet("owner-properties")] 
-        public IActionResult DisplayOwnerProperty()
-        {
+        //[Authorize(Roles = "Owner")]
+        //[HttpGet("owner-properties")] 
+        //public IActionResult DisplayOwnerProperty()
+        //{
           
-            var ownerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value; 
+        //    var ownerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value; 
 
           
-            if (string.IsNullOrEmpty(ownerIdString) || !int.TryParse(ownerIdString, out int ownerId))
-            {
-                return Unauthorized("Owner ID claim not found or is invalid in token.");
-            }
+        //    if (string.IsNullOrEmpty(ownerIdString) || !int.TryParse(ownerIdString, out int ownerId))
+        //    {
+        //        return Unauthorized("Owner ID claim not found or is invalid in token.");
+        //    }
 
            
-            var propertyDetails = _property.DisplayOwnerProperty(ownerId); 
+        //    var propertyDetails = _property.DisplayOwnerProperty(ownerId); 
 
           
-            if (propertyDetails == null)
-            {
-                return NotFound("No property found for this owner."); 
-            }
+        //    if (propertyDetails == null)
+        //    {
+        //        return NotFound("No property found for this owner."); 
+        //    }
 
-            return Ok(propertyDetails); 
-        }
-
-
+        //    return Ok(propertyDetails); 
+        //}
 
 
         [HttpGet("/Owner/Properties")]
@@ -57,14 +54,21 @@ namespace EazyRent.Controllers
                 return Unauthorized("Owner ID claim not found or is invalid in token.");
             }
 
-            var properties = await _property.GetPropertiesForOwnerAsync(ownerId);
-
-            if (properties == null || !properties.Any())
+            try
             {
-                return NoContent(); // 204 No Content if no properties found for this owner
-            }
+                var properties = await _property.GetPropertiesForOwnerAsync(ownerId);
 
-            return Ok(properties); // Returns a list of PropertyDetailsDTO
+                if (properties == null || !properties.Any())
+                {
+                    return NoContent(); // 204 No Content if no properties found for this owner
+                }
+
+                return Ok(properties); // Returns a list of PropertyDetailsDTO
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An error occurred while fetching owner's properties.", Details = ex.Message });
+            }
         }
 
 
@@ -83,7 +87,7 @@ namespace EazyRent.Controllers
         }
 
         [Authorize(Roles = "Tenant")]
-        [HttpGet("/Tenant/GetPropertyById{propertyId}")] // Route parameter for the property ID
+        [HttpGet("/Tenant/GetPropertyById/{propertyId}")] // Route parameter for the property ID
         public async Task<IActionResult> GetPropertyById(int propertyId)
         {
             // Input validation for propertyId if needed (e.g., propertyId must be > 0)
@@ -102,7 +106,7 @@ namespace EazyRent.Controllers
             return Ok(property);
         }
 
-        [HttpPut("/Owner/UpdateProperty{propertyId}")] // Use PUT for updating a resource by ID
+        [HttpPut("/Owner/UpdateProperty/{propertyId}")] // Use PUT for updating a resource by ID
         [Authorize(Roles = "Owner")] // Only owners can update properties
         public async Task<IActionResult> UpdateProperty(int propertyId, [FromBody] PropertyDetailsDTO updatedPropertyDetails)
         {
@@ -136,7 +140,7 @@ namespace EazyRent.Controllers
             }
             return Ok("Property updated successfully.");
         }
-        [HttpDelete("/Owner/DeleteProperty{propertyId}")] // Use DELETE for deleting a resource by ID
+        [HttpDelete("/Owner/DeleteProperty/{propertyId}")] // Use DELETE for deleting a resource by ID
         [Authorize(Roles = "Owner")] // Only owners can delete their properties
         public async Task<IActionResult> DeleteProperty(int propertyId)
         {

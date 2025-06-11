@@ -1,4 +1,5 @@
-﻿using EazyRent.Data;
+﻿using AutoMapper;
+using EazyRent.Data;
 using EazyRent.Models.Domains;
 using EazyRent.Models.DTO;
 using EazyRent.Models.Services;
@@ -14,26 +15,41 @@ namespace EazyRent.Controllers
     {
         private readonly RentalDBContext _dbContext;
         private readonly IJwtTokenService _jwtTokenService;
-        public UserController(RentalDBContext rentalDBContext, IJwtTokenService jwtTokenService)
+        private readonly IMapper mapper;
+
+        public UserController(RentalDBContext rentalDBContext, IJwtTokenService jwtTokenService,IMapper mapper)
         {
             _dbContext = rentalDBContext;
             _jwtTokenService = jwtTokenService;
+            this.mapper = mapper;
         }
         [HttpPost("register")]
         public async Task<IActionResult> RegisterOwner(RegistrationDTO dto)
         {
-            var user = new User
+            try
             {
-                FullName = dto.FullName,
-                Email = dto.Email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                PhoneNumber = dto.PhoneNumber,
-                Role=dto.Role
-            };
+                var user = mapper.Map<User>(dto);
 
-            _dbContext.Users.Add(user);
-            await _dbContext.SaveChangesAsync();
-            return Ok("Owner registered");
+                _dbContext.Users.Add(user);
+                await _dbContext.SaveChangesAsync();
+
+                if (user.Role == "Owner")
+                {
+                    return Ok("Owner registered");
+                }
+                else if (user.Role == "Tenant")
+                {
+                    return Ok("Tenant registered");
+                }
+                else
+                {
+                    throw new Exception("Invalid role");
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An error occurred during registration.", Details = ex.Message });
+            }
         }
 
         [HttpPost("login")]

@@ -55,37 +55,14 @@ namespace EazyRent.Models.Repositories
 
             return newLease;
         }
-        //public async Task<LeaseDetailsDTO?> GetLeaseByIdAsync(int leaseId)
-        //{
-        //    var lease = await _dbContext.Leases
-        //                                .Include(l => l.Property) // Include related property if needed for DTO
-        //                                .Include(l => l.Tenant)   // Include related tenant if needed for DTO
-        //                                .FirstOrDefaultAsync(l => l.LeaseId == leaseId);
 
-        //    if (lease == null)
-        //    {
-        //        return null; // Lease not found
-        //    }
+        public async Task<Lease?> GetLeaseByIdAsync(int leaseId)
+        {
+            return await _dbContext.Leases
+                .Include(l => l.Property)
+                .FirstOrDefaultAsync(l => l.LeaseId == leaseId);
+        }
 
-        //    // Map the Lease entity to LeaseDetailsDTO
-        //    var leaseDetailsDto = new LeaseDetailsDTO
-        //    {
-        //        LeaseId = lease.LeaseId,
-        //        PropertyId = lease.PropertyId,
-        //        TenantId = lease.TenantId,
-        //        StartDate = lease.StartDate,
-        //        EndDate = lease.EndDate,
-        //        RentAmount = lease.RentAmount,
-        //        Status = lease.Status,
-        //        DigitalSignature = lease.DigitalSignature,
-        //        // Add any other properties you want to include from the Lease entity or its related entities
-        //        // Example:
-        //        // PropertyAddress = lease.Property?.Address, // Use ?. for null-conditional if Property can be null
-        //        // TenantEmail = lease.Tenant?.Email,
-        //    };
-
-        //    return leaseDetailsDto;
-        //}
         public async Task<IEnumerable<LeaseDetailsDTO>> GetLeasesByTenantIdAsync(int tenantId)
         {
             var leases = await _dbContext.Leases
@@ -113,6 +90,30 @@ namespace EazyRent.Models.Repositories
             }).ToList();
 
             return leaseDetailsDtos;
+        }
+
+        public async Task<IEnumerable<LeaseDetailsDTO>> GetLeasesByOwnerIdAsync(int ownerId)
+        {
+            return await _dbContext.Leases
+                .Include(l => l.Property) // Include the related Property
+                .Include(l => l.Tenant) // Include the related Tenant (User)
+                .Where(l => l.Property.OwnerId == ownerId) // Filter by the OwnerId on the Property
+                .Select(l => new LeaseDetailsDTO
+                {
+                    LeaseId = l.LeaseId,
+                    PropertyId = l.PropertyId,
+                    StartDate = l.StartDate,
+                    EndDate = l.EndDate,
+                    RentAmount = l.RentAmount,
+                    Status = l.Status
+                })
+                .ToListAsync();
+        }
+
+        public async Task<bool> UpdateLeaseAsync(Lease lease)
+        {
+            _dbContext.Leases.Update(lease);
+            return await _dbContext.SaveChangesAsync() > 0;
         }
     }
 }

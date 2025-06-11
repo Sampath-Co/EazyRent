@@ -32,22 +32,32 @@ namespace EazyRent.Controllers
                 return BadRequest(ModelState);
             }
 
-            var tenantIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(tenantIdString) || !int.TryParse(tenantIdString, out int tenantId))
+            try
             {
-                return Unauthorized("Tenant ID claim not found or is invalid in token.");
+                var tenantIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(tenantIdString) || !int.TryParse(tenantIdString, out int tenantId))
+                {
+                    throw new UnauthorizedAccessException("Tenant ID claim not found or is invalid in token.");
+                }
+
+                var newLease = await _leaseRepository.CreateLeaseRequestAsync(tenantId, createLeaseDto);
+
+                if (newLease == null)
+                {
+                    throw new Exception("Could not create lease request. Please check property details or contact support.");
+                }
+
+                // 201 Created is appropriate for successful resource creation
+                return Ok("Lease Created");
             }
-
-            var newLease = await _leaseRepository.CreateLeaseRequestAsync(tenantId, createLeaseDto);
-
-            if (newLease == null)
+            catch (UnauthorizedAccessException ex)
             {
-                
-                return BadRequest("Could not create lease request. Please check property details or contact support.");
+                return Unauthorized(new { Message = ex.Message });
             }
-
-            // 201 Created is appropriate for successful resource creation
-            return Ok("Lease Created");
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An error occurred while creating the lease.", Details = ex.Message });
+            }
         }
         //[HttpGet("my-leases/tenant")]
         //[Authorize(Roles = "Tenant")] // Only Tenants can access this endpoint
@@ -69,7 +79,7 @@ namespace EazyRent.Controllers
         //    return Ok(leases); // Returns a list of LeaseDetailsDTO
         //}
 
-        [HttpGet("my-leases/tenant")]
+        [HttpGet("/Tenant/Leases")]
         [Authorize(Roles = "Tenant")] // Only Tenants can access this endpoint
         public async Task<IActionResult> GetMyLeasesAsTenant()
         {
@@ -94,6 +104,31 @@ namespace EazyRent.Controllers
 
             // Return the list of LeaseDetailsDTOs
             return Ok(leases); // 200 OK with the list of leases
+        }
+
+        //Controller:
+        [HttpGet("/Owner/Leases")]
+        [Authorize(Roles = "Owner")] // Only Owners can access this endpoint
+        public async Task<IActionResult> GetMyLeasesAsOwner()
+        {
+            // 1. Get the authenticated Owner's ID from their claims
+            var ownerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(ownerIdString) || !int.TryParse(ownerIdString, out int ownerId))
+            {
+                // This means the user is authenticated but their owner ID claim is missing or invalid.
+                return Unauthorized("Owner ID claim not found or is invalid in token.");
+            }
+
+            // 2. Call the repository to get all leases for properties owned by this owner
+            var leases = await _leaseRepository.GetLeasesByOwnerIdAsync(ownerId);
+
+            if (!leases.Any())
+            {
+                return NoContent(); // 204 No Content if no leases found for this owner's properties
+            }
+
+            return Ok(leases); // Returns a list of LeaseDetailsDTO
         }
 
 

@@ -16,17 +16,23 @@ namespace EazyRent.Controllers
             _property = property;
         }
         [HttpGet("/Tenant/Properties")]
-        public async Task<IActionResult> GetAllProperties()
+        public async Task<IActionResult> GetAllProperties([FromQuery] string? filterOn, [FromQuery] string? filterQuery, [FromQuery] decimal? filterRent)
         {
-            var properties = await _property.GetAllPropertiesAsync();
-
-            if (properties == null || !properties.Any()) // Check if the list is null or empty
+            try
             {
-                return NoContent(); // 204 No Content - indicates success but no resources to return
-                                    // or return NotFound("No properties found."); depending on your API design philosophy
-            }
+                var properties = await _property.GetAllPropertiesAsync(filterOn, filterQuery, filterRent);
 
-            return Ok(properties);
+                if (properties == null || !properties.Any())
+                {
+                    return NoContent();
+                }
+
+                return Ok(properties);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An error occurred while fetching properties.", Details = ex.Message });
+            }
         }
     }
 }
