@@ -9,7 +9,12 @@ namespace EazyRent.Models.Repositories
     {
         Task<IEnumerable<PaymentDTO>> GetPaymentsByLeaseIdAsync(int leaseId);
         Task<PaymentDTO?> GetPaymentByIdAsync(int paymentId);
-        Task<bool> AddPaymentAsync(PaymentDTO paymentDto);
-        Task<bool> AddPaymentAsync(Payment payment);
+        //Task<bool> AddPaymentAsync(PaymentDTO paymentDto);
+        Task<Payment> AddPaymentAsync(Payment payment);
+
+        //Task<Payment> AddPaymentAsync(Payment payment);
+        //Task<Payment> GetPaymentByIdAsync(int paymentId);
+        //Task<bool> UpdatePaymentAsync(Payment payment);
+
     }
 }

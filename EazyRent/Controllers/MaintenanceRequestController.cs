@@ -1,13 +1,14 @@
 ﻿using AutoMapper;
+using EazyRent.Models.Domains;
+using EazyRent.Models.DTO;
+using EazyRent.Models.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using EazyRent.Models.DTO;
-using EazyRent.Models.Domains;
-using EazyRent.Models.Repositories;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System;
 using RenatalPropertyManagement.Models.DTO;
+using System;
+using System.Collections.Generic;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace EazyRent.Controllers
 {
@@ -25,57 +26,78 @@ namespace EazyRent.Controllers
         }
 
         // To get all maintenance requests
-        [HttpGet]
+        [Authorize(Roles ="Owner")]
+        [HttpGet("/Owner/GetAllMaintenance/")]
         public async Task<IActionResult> GetAllRequests()
         {
-            try
-            {
-                var requests = await _maintenanceRequestRepository.GetAllRequest();
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            int ownerId = int.Parse(userId);
+
+            var requests = await _maintenanceRequestRepository.GetAllRequest(ownerId);
                 var result = _mapper.Map<List<MaintenanceRequestDto>>(requests);
                 return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { Message = "An error occurred while fetching maintenance requests.", Details = ex.Message });
-            }
+            
+            
         }
 
-        // To get a maintenance request by its ID
+
+
+        //To get a maintenance request by its ID
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetRequestById([FromRoute] int id)
         {
-            try
+            var request = await _maintenanceRequestRepository.GetRequestById(id);
+            if (request == null)
             {
-                var request = await _maintenanceRequestRepository.GetRequestById(id);
-                if (request == null)
-                {
-                    return NotFound(new { Message = "Maintenance request not found" });
-                }
-                var result = _mapper.Map<MaintenanceRequestDto>(request);
-                return Ok(result);
+                return NotFound(new { Message = "Maintenance request not found" });
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { Message = "An error occurred while fetching the maintenance request.", Details = ex.Message });
-            }
+            var result = _mapper.Map<MaintenanceRequestDto>(request);
+            return Ok(result);
         }
 
-        // To add a new maintenance request
+
+        [Authorize(Roles ="Tenant")]
+       [HttpGet("/Tenant/GetAllMaintenance/")]
+        public async Task<IActionResult> GetAllRequestsByTenant()
+        {
+            // Extract the UserId from the JWT claims
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("User ID not found in token.");
+            int tenantId = int.Parse(userId);
+            var requests = await _maintenanceRequestRepository.GetAllRequestsByTenant(tenantId);
+            var result = _mapper.Map<List<MaintenanceRequestDto>>(requests);
+            return Ok(result);
+        }
+
+
+
+
+
+
+
+
+
+
         [Authorize(Roles = "Tenant")]
         [HttpPost("/Tenant/CreateMaintenanceRequest/")]
         public async Task<IActionResult> AddRequest([FromBody] MaintenanceRequestDto requestDto)
         {
-            try
-            {
                 // Extract the UserId from the JWT claims
-                var loggedInTenantId = User.FindFirst("userId")?.Value;
-                if (string.IsNullOrEmpty(loggedInTenantId))
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+               
+                if (string.IsNullOrEmpty(userId))
                 {
                     return Unauthorized("User ID not found in token.");
                 }
+                  int loggedInTenantId = int.Parse(userId);
 
-                // Validate that the tenant has a lease on the property
-                if (!requestDto.PropertyId.HasValue)
+            // Validate that the tenant has a lease on the property
+            if (!requestDto.PropertyId.HasValue)
                 {
                     return BadRequest("Property ID is required.");
                 }
@@ -88,22 +110,17 @@ namespace EazyRent.Controllers
                 var request = _mapper.Map<MaintenanceRequest>(requestDto);
                 await _maintenanceRequestRepository.AddRequest(request);
                 return CreatedAtAction(nameof(GetRequestById), new { id = request.RequestId }, requestDto);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { Message = "An error occurred while adding the maintenance request.", Details = ex.Message });
-            }
         }
 
         // Adjusting the method to update maintenance status using PropertyId
         [Authorize(Roles = "Owner")]
-        [HttpPut("update-status/{requestId:int}")]
+        [HttpPut("Owner/Update/{requestId:int}")]
         public async Task<IActionResult> UpdateMaintenanceStatus([FromRoute] int requestId, [FromBody] string status)
         {
             try
             {
                 // Extract the UserId from the JWT claims
-                var loggedInOwnerId = User.FindFirst("UserId")?.Value;
+                var loggedInOwnerId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(loggedInOwnerId))
                 {
                     return Unauthorized("User ID not found in token.");

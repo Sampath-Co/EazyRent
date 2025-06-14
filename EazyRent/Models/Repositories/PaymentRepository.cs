@@ -45,16 +45,16 @@ namespace EazyRent.Models.Repositories
             return true;
         }
 
-        public async Task<bool> AddPaymentAsync(Payment payment)
+        public async Task<Payment> AddPaymentAsync(Payment payment)
         {
             if (payment == null)
             {
-            return false;
+                return null;
             }
 
             _dbContext.Payments.Add(payment);
             await _dbContext.SaveChangesAsync();
-            return true;
+            return payment; 
         }
     }
 }

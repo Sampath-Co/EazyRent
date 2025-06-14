@@ -2,9 +2,9 @@ using EazyRent.Data;
 using EazyRent.Models.Domains;
 using EazyRent.Models.Repositories;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using System;
 
 namespace EazyRent.Models.Repositories
 {
@@ -17,14 +17,22 @@ namespace EazyRent.Models.Repositories
             _context = context;
         }
 
-        public async Task<List<MaintenanceRequest>> GetAllRequest()
+        public async Task<List<MaintenanceRequest>> GetAllRequest(int ownerId)
         {
-            return await _context.MaintenanceRequests.ToListAsync();
+
+            return await _context.MaintenanceRequests
+                          .Include(mr => mr.Property)
+                          .ThenInclude(p => p.Owner) // Assuming navigation property exists
+                          .Where(mr => mr.Property.OwnerId == ownerId).ToListAsync();
+
         }
 
         public async Task<MaintenanceRequest?> GetRequestById(int id)
         {
-            var maintenanceRequest = await _context.MaintenanceRequests.FirstOrDefaultAsync(request => request.RequestId == id);
+            var maintenanceRequest = await _context.MaintenanceRequests
+                .Include(m => m.Property)
+                .FirstOrDefaultAsync(request => request.RequestId == id);
+
             if (maintenanceRequest == null)
             {
                 throw new KeyNotFoundException($"Maintenance request with RequestId {id} not found.");
@@ -72,10 +80,10 @@ namespace EazyRent.Models.Repositories
             return property;
         }
 
-        public async Task<Lease?> GetLeaseByPropertyIdAndTenantId(int propertyId, string tenantId)
+        public async Task<Lease?> GetLeaseByPropertyIdAndTenantId(int propertyId, int tenantId)
         {
             return await _context.Leases
-                .FirstOrDefaultAsync(lease => lease.PropertyId == propertyId && lease.TenantId.Equals(tenantId) && lease.Status == "Active");
+                .FirstOrDefaultAsync(l => l.PropertyId == propertyId && l.TenantId == tenantId && l.Status == "Active");
         }
 
         // Adjusting the method to update maintenance status using PropertyId
@@ -94,6 +102,15 @@ namespace EazyRent.Models.Repositories
         public async Task<Lease?> GetLeaseById(int leaseId)
         {
             return await _context.Leases.Include(l => l.Property).FirstOrDefaultAsync(l => l.LeaseId == leaseId);
+        }
+
+        public Task<List<MaintenanceRequest>> GetAllRequestsByTenant(int tenantId)
+        {
+            var requests = _context.MaintenanceRequests
+                .Include(mr => mr.Property)
+                .Where(mr => mr.Property.Leases.Any(l => l.TenantId == tenantId))
+                .ToListAsync();
+            return requests;
         }
     }
 }

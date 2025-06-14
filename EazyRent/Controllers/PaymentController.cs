@@ -58,19 +58,57 @@ namespace EazyRent.Controllers
             return Ok(paymentDto);
         }
 
-        [HttpPost]
-        //[Authorize(Roles = "Tenant")]
-        public async Task<IActionResult> AddPayment([FromBody] PaymentDTO paymentDto)
-        {
-            var payment = _mapper.Map<Payment>(paymentDto);
-            var success = await _paymentRepository.AddPaymentAsync(payment);
 
-            if (!success)
+
+
+
+
+
+        [HttpPost("Create")]
+        [Authorize(Roles = "Tenant")]
+        public async Task<IActionResult> CreatePayment([FromBody] PaymentDTO paymentDto)
+        {
+            if (!ModelState.IsValid)
             {
-                return BadRequest("Failed to add payment.");
+                return BadRequest(ModelState);
             }
 
-            return Ok("Payment added successfully.");
+            try
+            {
+                var payment = _mapper.Map<Payment>(paymentDto);
+                payment.Status = "Pending"; // Default status
+                //payment.CreatedDate = DateTime.UtcNow;
+
+                var createdPayment = await _paymentRepository.AddPaymentAsync(payment);
+
+                if (createdPayment == null)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, "Failed to create payment.");
+                }
+
+                var createdDto = _mapper.Map<PaymentDTO>(createdPayment);
+                return CreatedAtAction(nameof(GetPaymentById), new { paymentId = createdDto.LeaseId }, createdDto);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "Error creating payment.", Details = ex.Message });
+            }
         }
+
+
+        //[HttpPost]
+        ////[Authorize(Roles = "Tenant")]
+        //public async Task<IActionResult> AddPayment([FromBody] PaymentDTO paymentDto)
+        //{
+        //    var payment = _mapper.Map<Payment>(paymentDto);
+        //    var success = await _paymentRepository.AddPaymentAsync(payment);
+
+        //    if (!success)
+        //    {
+        //        return BadRequest("Failed to add payment.");
+        //    }
+
+        //    return Ok("Payment added successfully.");
+        //}
     }
 }

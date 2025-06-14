@@ -15,16 +15,20 @@ namespace EazyRent.Controllers
     public class LeaseController : ControllerBase
     {
         private readonly ILease _leaseRepository;
+
+        public IPayment _paymentRepository { get; }
+
         // private readonly RentalDBContext _dbContext; // <-- DO NOT inject DbContext here if you use a repository
 
-        public LeaseController(ILease leaseRepository) // ONLY inject the repository
+        public LeaseController(ILease leaseRepository ,IPayment paymentRepository) // ONLY inject the repository
         {
             _leaseRepository = leaseRepository;
+            _paymentRepository = paymentRepository;
             // _dbContext = dbContext; // <-- REMOVE this line if it existed
         }
 
         [Authorize(Roles = "Tenant")]
-        [HttpPost("/Tenant/RequestLease")]
+        [HttpPost("Tenant/RequestLease")]
         public async Task<IActionResult> RequestLease([FromBody] CreateLeaseDTO createLeaseDto)
         {
             if (!ModelState.IsValid)
@@ -44,11 +48,21 @@ namespace EazyRent.Controllers
 
                 if (newLease == null)
                 {
-                    throw new Exception("Could not create lease request. Please check property details or contact support.");
+                    throw new Exception("Could not create lease request.");
                 }
 
-                // 201 Created is appropriate for successful resource creation
-                return Ok("Lease Created");
+                // Create initial payment
+                var payment = new Payment
+                {
+                    LeaseId = newLease.LeaseId,
+                    Amount = createLeaseDto.ProposedRentAmount, // or any logic you use
+                    //PaymentDate = DateTime.Now(), // example due date
+                    Status = "Pending"
+                }; 
+
+                await _paymentRepository.AddPaymentAsync(payment);
+
+                return Ok("Lease and initial payment created.");
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -56,9 +70,47 @@ namespace EazyRent.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An error occurred while creating the lease.", Details = ex.Message });
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An error occurred.", Details = ex.Message });
             }
         }
+
+
+        //[Authorize(Roles = "Tenant")]
+        //[HttpPost("/Tenant/RequestLease")]
+        //public async Task<IActionResult> RequestLease([FromBody] CreateLeaseDTO createLeaseDto)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(ModelState);
+        //    }
+
+        //    try
+        //    {
+        //        var tenantIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        //        if (string.IsNullOrEmpty(tenantIdString) || !int.TryParse(tenantIdString, out int tenantId))
+        //        {
+        //            throw new UnauthorizedAccessException("Tenant ID claim not found or is invalid in token.");
+        //        }
+
+        //        var newLease = await _leaseRepository.CreateLeaseRequestAsync(tenantId, createLeaseDto);
+
+        //        if (newLease == null)
+        //        {
+        //            throw new Exception("Could not create lease request. Please check property details or contact support.");
+        //        }
+
+        //        // 201 Created is appropriate for successful resource creation
+        //        return Ok("Lease Created");
+        //    }
+        //    catch (UnauthorizedAccessException ex)
+        //    {
+        //        return Unauthorized(new { Message = ex.Message });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An error occurred while creating the lease.", Details = ex.Message });
+        //    }
+        //}
         //[HttpGet("my-leases/tenant")]
         //[Authorize(Roles = "Tenant")] // Only Tenants can access this endpoint
         //public async Task<IActionResult> GetMyLeasesAsTenant()
