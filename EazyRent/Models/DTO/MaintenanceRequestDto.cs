@@ -1,4 +1,4 @@
-﻿namespace RenatalPropertyManagement.Models.DTO
+﻿namespace EazyRent.Models.DTO
 {
     public class MaintenanceRequestDto
     {

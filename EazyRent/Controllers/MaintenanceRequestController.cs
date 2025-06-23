@@ -4,7 +4,6 @@ using EazyRent.Models.DTO;
 using EazyRent.Models.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RenatalPropertyManagement.Models.DTO;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;

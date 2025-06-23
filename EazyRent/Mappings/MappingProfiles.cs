@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using EazyRent.Models.Domains;
 using EazyRent.Models.DTO;
-using RenatalPropertyManagement.Models.DTO;
 
 namespace EazyRent.Mappings
 {
