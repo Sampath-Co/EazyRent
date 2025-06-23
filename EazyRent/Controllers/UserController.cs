@@ -35,11 +35,11 @@ namespace EazyRent.Controllers
 
                 if (user.Role == "Owner")
                 {
-                    return Ok("Owner registered");
+                    return Ok(new { message = "Owner registered", user });
                 }
                 else if (user.Role == "Tenant")
                 {
-                    return Ok("Tenant registered");
+                    return Ok(new { message = "Tenant registered", user });
                 }
                 else
                 {
@@ -57,9 +57,9 @@ namespace EazyRent.Controllers
         {
             var user = _dbContext.Users.SingleOrDefault(t => t.Email == dto.Email);
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
-                return Unauthorized("Invalid credentials");
+                return Unauthorized(new { message = "Invalid credentials" });
 
-            var token = _jwtTokenService.GenerateJwtToken(user.Email, user.Role, user.UserId);
+            var token = _jwtTokenService.GenerateJwtToken(user.Email, user.Role, user.UserId, user.FullName); 
             return Ok(new { token });
         }
     }

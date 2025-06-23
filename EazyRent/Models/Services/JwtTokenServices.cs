@@ -14,15 +14,15 @@ namespace EazyRent.Models.Services
             _config = config;
         }
 
-        public string GenerateJwtToken(string email, string role, int userId)
+        public string GenerateJwtToken(string email, string role, int userId, string fullName)
         {
             var claims = new[]
             {
-            new Claim(ClaimTypes.Email, email),
-            new Claim(ClaimTypes.Role, role),
-            new Claim(ClaimTypes.NameIdentifier, userId.ToString())
-
-        };
+                new Claim(ClaimTypes.Email, email),
+                new Claim(ClaimTypes.Role, role),
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                new Claim(ClaimTypes.Name, fullName) 
+            };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
