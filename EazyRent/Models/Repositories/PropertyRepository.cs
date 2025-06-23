@@ -17,16 +17,16 @@ namespace EazyRent.Models.Repositories
             _mapper = mapper;
         }
 
-        public PropertyDetailsDTO DisplayOwnerProperty(int ownerId)
+        public GetPropertiesDTO DisplayOwnerProperty(int ownerId)
         {
             var property = _dbContext.Properties
                 .Where(t => t.OwnerId == ownerId)
                 .FirstOrDefault();
 
-            return _mapper.Map<PropertyDetailsDTO>(property);
+            return _mapper.Map<GetPropertiesDTO>(property);
         }
 
-        public async Task<bool> AddPropertyAsync(string ownerEmail, PropertyDetailsDTO dto)
+        public async Task<bool> AddPropertyAsync(string ownerEmail, GetPropertiesDTO dto)
         {
             var owner = _dbContext.Users.FirstOrDefault(o => o.Email == ownerEmail);
             if (owner == null)
@@ -40,16 +40,16 @@ namespace EazyRent.Models.Repositories
             return true;
         }
 
-        public async Task<PropertyDetailsDTO> GetPropertyByIdAsync(int propertyId)
+        public async Task<GetPropertiesDTO> GetPropertyByIdAsync(int propertyId)
         {
             var property = await _dbContext.Properties
                 .Where(p => p.PropertyId == propertyId)
                 .FirstOrDefaultAsync();
 
-            return _mapper.Map<PropertyDetailsDTO>(property);
+            return _mapper.Map<GetPropertiesDTO>(property);
         }
 
-        //public async Task<IEnumerable<PropertyDetailsDTO>> GetAllPropertiesAsync( string? filterOn = null, string? filterQuery = null)
+        //public async Task<IEnumerable<GetPropertiesDTO>> GetAllPropertiesAsync( string? filterOn = null, string? filterQuery = null)
         //{
         //    //var properties = await _dbContext.Properties.ToListAsync();
         //    var propertiesQuery =  _dbContext.Properties.AsQueryable();
@@ -61,10 +61,10 @@ namespace EazyRent.Models.Repositories
         //        }
 
         //    }
-        //    return _mapper.Map<IEnumerable<PropertyDetailsDTO>>(propertiesQuery);
+        //    return _mapper.Map<IEnumerable<GetPropertiesDTO>>(propertiesQuery);
         //}
 
-        public async Task<IEnumerable<PropertyDetailsDTO>> GetAllPropertiesAsync(string? filterOn = null, string? filterQuery = null, decimal? filterRent = null)
+        public async Task<IEnumerable<GetPropertiesDTO>> GetAllPropertiesAsync(string? filterOn = null, string? filterQuery = null, decimal? filterRent = null)
         {
             var propertiesQuery = _dbContext.Properties.AsQueryable();
 
@@ -82,19 +82,19 @@ namespace EazyRent.Models.Repositories
             }
 
             var propertiesList = await propertiesQuery.ToListAsync();
-            return _mapper.Map<IEnumerable<PropertyDetailsDTO>>(propertiesList);
+            return _mapper.Map<IEnumerable<GetPropertiesDTO>>(propertiesList);
         }
 
-        public async Task<IEnumerable<PropertyDetailsDTO>> GetPropertiesForOwnerAsync(int ownerId)
+        public async Task<IEnumerable<GetPropertiesDTO>> GetPropertiesForOwnerAsync(int ownerId)
         {
             var properties = await _dbContext.Properties
                 .Where(p => p.OwnerId == ownerId)
                 .ToListAsync();
 
-            return _mapper.Map<IEnumerable<PropertyDetailsDTO>>(properties);
+            return _mapper.Map<IEnumerable<GetPropertiesDTO>>(properties);
         }
 
-        public async Task<bool> UpdatePropertyAsync(int propertyId, int ownerId, PropertyDetailsDTO updatedPropertyDetails)
+        public async Task<bool> UpdatePropertyAsync(int propertyId, int ownerId, GetPropertiesDTO updatedPropertyDetails)
         {
             var existingProperty = await _dbContext.Properties
                 .FirstOrDefaultAsync(p => p.PropertyId == propertyId);
@@ -122,6 +122,31 @@ namespace EazyRent.Models.Repositories
             _dbContext.Properties.Remove(propertyToDelete);
             await _dbContext.SaveChangesAsync();
             return true;
+        }
+
+        PropertyDetailsDTO IProperty.DisplayOwnerProperty(int ownerId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> AddPropertyAsync(string ownerEmail, PropertyDetailsDTO dto)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<PropertyDetailsDTO> IProperty.GetPropertyByIdAsync(int propertyId)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<IEnumerable<PropertyDetailsDTO>> IProperty.GetPropertiesForOwnerAsync(int ownerId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> UpdatePropertyAsync(int propertyId, int ownerId, PropertyDetailsDTO updatedPropertyDetails)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -2,19 +2,25 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using AutoMapper;
+using EazyRent.Models.DTO;
 
 namespace EazyRent.Controllers
 {
-    [Authorize(Roles = "Tenant")]
+    //[Authorize(Roles = "Tenant")]
     [Route("api/[controller]")]
     [ApiController]
     public class TenantController : ControllerBase
     {
         private readonly IProperty _property;
-        public TenantController(IProperty property)
+        private readonly IMapper mapper;
+
+        public TenantController(IProperty property, IMapper mapper)
         {
             _property = property;
+            this.mapper = mapper;
         }
+
         [HttpGet("/Tenant/Properties")]
         public async Task<IActionResult> GetAllProperties([FromQuery] string? filterOn, [FromQuery] string? filterQuery, [FromQuery] decimal? filterRent)
         {
@@ -27,7 +33,7 @@ namespace EazyRent.Controllers
                     return NoContent();
                 }
 
-                // Map the list of Property to a list of GetPropertiesDTO
+                // Map the list of Property to a list of PropertyDetailsDTO
                 var propertyDTOs = mapper.Map<IEnumerable<GetPropertiesDTO>>(properties);
 
                 return Ok(propertyDTOs);

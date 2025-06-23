@@ -9,7 +9,7 @@ namespace EazyRent.Mappings
         public MappingProfiles()
         {
 
-            CreateMap<Property, PropertyDetailsDTO>().ReverseMap()
+            CreateMap<Property, GetPropertiesDTO>().ReverseMap()
              .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<RegistrationDTO, User>()
