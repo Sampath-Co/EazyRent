@@ -43,10 +43,10 @@ namespace EazyRent.Controllers
 
 
         [HttpGet("/Owner/Properties")]
-        [Authorize(Roles = "Owner")] // Only users with the "Owner" role can access this
+        [Authorize(Roles = "Owner")] 
         public async Task<IActionResult> GetMyPropertiesAsOwner()
         {
-            // Extract the OwnerId from the authenticated user's JWT token
+            
             var ownerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (string.IsNullOrEmpty(ownerIdString) || !int.TryParse(ownerIdString, out int ownerId))
@@ -60,10 +60,10 @@ namespace EazyRent.Controllers
 
                 if (properties == null || !properties.Any())
                 {
-                    return NoContent(); // 204 No Content if no properties found for this owner
+                    return NoContent(); 
                 }
 
-                return Ok(properties); // Returns a list of PropertyDetailsDTO
+                return Ok(properties); 
             }
             catch (Exception ex)
             {
@@ -75,22 +75,45 @@ namespace EazyRent.Controllers
 
         [Authorize(Roles = "Owner")]
         [HttpPost("/Owner/AddProperty")]
-        public async Task<IActionResult> AddProperty([FromBody] PropertyDetailsDTO dto)
+        public async Task<IActionResult> AddProperty([FromForm] PropertyDetailsDTO dto)
         {
             var email = User.FindFirst(ClaimTypes.Email)?.Value;
 
+            // Handle image upload
+            if (dto.PropertyImage != null)
+            {
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                var uniqueFileName = Guid.NewGuid().ToString() + "_" + dto.PropertyImage.FileName;
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await dto.PropertyImage.CopyToAsync(fileStream);
+                }
+
+                // Save the file path or URL to the DTO for further processing
+                dto.PropertyDescription += $" ImagePath: /images/{uniqueFileName}";
+            }
+
             var success = await _property.AddPropertyAsync(email, dto);
             if (!success)
-                return Unauthorized("Owner not found");
+                return Unauthorized(new { Message = "Owner not found" });
 
-            return Ok("Property added successfully");
+            return Ok(new { Message = "Property added successfully" });
         }
 
+
+
         [Authorize(Roles = "Tenant")]
-        [HttpGet("/Tenant/GetPropertyById/{propertyId}")] // Route parameter for the property ID
+        [HttpGet("/Tenant/GetPropertyById/{propertyId}")] 
         public async Task<IActionResult> GetPropertyById(int propertyId)
         {
-            // Input validation for propertyId if needed (e.g., propertyId must be > 0)
+            
             if (propertyId <= 0)
             {
                 return BadRequest("Invalid property ID.");
@@ -106,8 +129,10 @@ namespace EazyRent.Controllers
             return Ok(property);
         }
 
-        [HttpPut("/Owner/UpdateProperty/{propertyId}")] // Use PUT for updating a resource by ID
-        [Authorize(Roles = "Owner")] // Only owners can update properties
+
+
+        [HttpPut("/Owner/UpdateProperty/{propertyId}")] 
+        [Authorize(Roles = "Owner")] 
         public async Task<IActionResult> UpdateProperty(int propertyId, [FromBody] PropertyDetailsDTO updatedPropertyDetails)
         {
             
@@ -140,30 +165,32 @@ namespace EazyRent.Controllers
             }
             return Ok("Property updated successfully.");
         }
-        [HttpDelete("/Owner/DeleteProperty/{propertyId}")] // Use DELETE for deleting a resource by ID
-        [Authorize(Roles = "Owner")] // Only owners can delete their properties
+
+
+
+        [HttpDelete("/Owner/DeleteProperty/{propertyId}")] 
+        [Authorize(Roles = "Owner")] 
         public async Task<IActionResult> DeleteProperty(int propertyId)
         {
-            // 1. Basic validation
+            
             if (propertyId <= 0)
             {
                 return BadRequest("Invalid property ID.");
             }
 
-            // 2. Extract owner ID from token
+           
             var ownerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(ownerIdString) || !int.TryParse(ownerIdString, out int ownerId))
             {
                 return Unauthorized("Owner ID claim not found or is invalid.");
             }
 
-            // 3. Call the repository to delete the property
+            
             var success = await _property.DeletePropertyAsync(propertyId, ownerId);
 
             if (!success)
             {
-                // The repository returns false if property not found OR if owner doesn't match
-                // We need to check if it was not found vs. forbidden.
+                
                 var propertyExists = await _property.GetPropertyByIdAsync(propertyId) != null;
                 if (!propertyExists)
                 {
@@ -171,7 +198,7 @@ namespace EazyRent.Controllers
                 }
                 else
                 {
-                    // Property exists, but ownerId from token didn't match property's ownerId
+                    
                     return Forbid("You are not authorized to delete this property.");
                 }
             }

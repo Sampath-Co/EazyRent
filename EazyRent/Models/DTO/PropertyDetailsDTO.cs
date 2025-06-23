@@ -8,7 +8,7 @@
 
         public string? AvailabilityStatus { get; set; }
 
-        public byte[]? PropertyImage { get; set; }
+        public IFormFile? PropertyImage { get; set; }
 
         public string? PropertyDescription { get; set; }
     }

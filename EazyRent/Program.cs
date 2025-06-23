@@ -83,6 +83,29 @@ builder.Services.AddScoped<IPayment, PaymentRepository>();
 builder.Services.AddScoped<IMaintenanceRequestRepository, MaintenanceRepository>();
 builder.Services.AddAutoMapper(typeof(MappingProfiles));
 
+
+// Add CORS policy
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy("AllowAll",
+//        policy => policy
+//            .AllowAnyOrigin()
+//            .AllowAnyHeader()
+//            .AllowAnyMethod());
+//});
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        builder =>
+        {
+            builder.WithOrigins("http://localhost:4200") // Frontend URL
+                   .AllowAnyHeader()
+                   .AllowAnyMethod()
+                   .AllowCredentials(); // Allow credentials if needed
+        });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -94,10 +117,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseCors("AllowFrontend"); // Ensure this is before UseAuthentication and UseAuthorization
+
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Add global exception handler middleware
+app.UseStaticFiles();
+
+//app.UseCors("AllowAll");
+// global exception handler middleware
 app.UseExceptionHandler(errorApp =>
 {
     errorApp.Run(async context =>
