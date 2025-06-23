@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using AutoMapper;
+using EazyRent.Models.DTO;
 
 namespace EazyRent.Controllers
 {
@@ -11,10 +13,14 @@ namespace EazyRent.Controllers
     public class TenantController : ControllerBase
     {
         private readonly IProperty _property;
-        public TenantController(IProperty property)
+        private readonly IMapper mapper;
+
+        public TenantController(IProperty property, IMapper mapper)
         {
             _property = property;
+            this.mapper = mapper;
         }
+
         [HttpGet("/Tenant/Properties")]
         public async Task<IActionResult> GetAllProperties([FromQuery] string? filterOn, [FromQuery] string? filterQuery, [FromQuery] decimal? filterRent)
         {
@@ -27,7 +33,10 @@ namespace EazyRent.Controllers
                     return NoContent();
                 }
 
-                return Ok(properties);
+                // Map the list of Property to a list of PropertyDetailsDTO
+                var propertyDTOs = mapper.Map<List<PropertyDetailsDTO>>(properties);
+
+                return Ok(propertyDTOs);
             }
             catch (Exception ex)
             {
