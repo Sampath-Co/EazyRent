@@ -27,7 +27,10 @@ namespace EazyRent.Controllers
                     return NoContent();
                 }
 
-                return Ok(properties);
+                // Map the list of Property to a list of GetPropertiesDTO
+                var propertyDTOs = mapper.Map<IEnumerable<GetPropertiesDTO>>(properties);
+
+                return Ok(propertyDTOs);
             }
             catch (Exception ex)
             {
