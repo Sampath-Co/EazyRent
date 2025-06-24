@@ -20,19 +20,19 @@ namespace EazyRent.Controllers
         //[HttpGet("owner-properties")] 
         //public IActionResult DisplayOwnerProperty()
         //{
-          
+
         //    var ownerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value; 
 
-          
+
         //    if (string.IsNullOrEmpty(ownerIdString) || !int.TryParse(ownerIdString, out int ownerId))
         //    {
         //        return Unauthorized("Owner ID claim not found or is invalid in token.");
         //    }
 
-           
+
         //    var propertyDetails = _property.DisplayOwnerProperty(ownerId); 
 
-          
+
         //    if (propertyDetails == null)
         //    {
         //        return NotFound("No property found for this owner."); 
@@ -43,10 +43,10 @@ namespace EazyRent.Controllers
 
 
         [HttpGet("/Owner/Properties")]
-        [Authorize(Roles = "Owner")] 
+        [Authorize(Roles = "Owner")]
         public async Task<IActionResult> GetMyPropertiesAsOwner()
         {
-            
+
             var ownerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (string.IsNullOrEmpty(ownerIdString) || !int.TryParse(ownerIdString, out int ownerId))
@@ -60,10 +60,10 @@ namespace EazyRent.Controllers
 
                 if (properties == null || !properties.Any())
                 {
-                    return NoContent(); 
+                    return NoContent();
                 }
 
-                return Ok(properties); 
+                return Ok(properties);
             }
             catch (Exception ex)
             {
@@ -79,41 +79,61 @@ namespace EazyRent.Controllers
         {
             var email = User.FindFirst(ClaimTypes.Email)?.Value;
 
-            // Handle image upload
-            if (dto.PropertyImage != null)
+            try
             {
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
-                if (!Directory.Exists(uploadsFolder))
+                // Handle image upload
+                if (dto.PropertyImage != null)
                 {
-                    Directory.CreateDirectory(uploadsFolder);
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
+
+
+
+                    // Create folder if it doesn't exist
+                    if (!Directory.Exists(uploadsFolder))
+                    {
+                        Directory.CreateDirectory(uploadsFolder);
+                    }
+
+                    // Generate unique file name
+                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + dto.PropertyImage.FileName;
+                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    // Save the file
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await dto.PropertyImage.CopyToAsync(fileStream);
+                    }
+                }
+                else
+                {
+                    return BadRequest(new { Message = "No image uploaded." });
                 }
 
-                var uniqueFileName = Guid.NewGuid().ToString() + "_" + dto.PropertyImage.FileName;
-                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                // Save property
+                var success = await _property.AddPropertyAsync(email, dto);
+                if (!success)
                 {
-                    await dto.PropertyImage.CopyToAsync(fileStream);
+                    return Unauthorized(new { Message = "Owner not found" });
                 }
 
-                // Save the file path or URL to the DTO for further processing
-                dto.PropertyDescription += $" ImagePath: /images/{uniqueFileName}";
+                return Ok(new
+                {
+                    Message = "Property added successfully",
+                    ImagePath = dto.PropertyDescription // For debugging
+                });
             }
-
-            var success = await _property.AddPropertyAsync(email, dto);
-            if (!success)
-                return Unauthorized(new { Message = "Owner not found" });
-
-            return Ok(new { Message = "Property added successfully" });
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred while uploading the property." });
+            }
         }
 
 
-
         [Authorize(Roles = "Tenant")]
-        [HttpGet("/Tenant/GetPropertyById/{propertyId}")] 
+        [HttpGet("/Tenant/GetPropertyById/{propertyId}")]
         public async Task<IActionResult> GetPropertyById(int propertyId)
         {
-            
+
             if (propertyId <= 0)
             {
                 return BadRequest("Invalid property ID.");
@@ -131,11 +151,11 @@ namespace EazyRent.Controllers
 
 
 
-        [HttpPut("/Owner/UpdateProperty/{propertyId}")] 
-        [Authorize(Roles = "Owner")] 
+        [HttpPut("/Owner/UpdateProperty/{propertyId}")]
+        [Authorize(Roles = "Owner")]
         public async Task<IActionResult> UpdateProperty(int propertyId, [FromBody] PropertyDetailsDTO updatedPropertyDetails)
         {
-            
+
             if (propertyId <= 0)
             {
                 return BadRequest("Invalid property ID.");
@@ -144,15 +164,15 @@ namespace EazyRent.Controllers
             if (updatedPropertyDetails == null)
             {
                 return BadRequest("Property details cannot be null.");
-            }       
+            }
             var ownerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(ownerIdString) || !int.TryParse(ownerIdString, out int ownerId))
             {
                 return Unauthorized("Owner ID claim not found or is invalid.");
-            }            
+            }
             var success = await _property.UpdatePropertyAsync(propertyId, ownerId, updatedPropertyDetails);
             if (!success)
-            {               
+            {
                 var propertyExists = await _property.GetPropertyByIdAsync(propertyId) != null;
                 if (!propertyExists)
                 {
@@ -168,29 +188,29 @@ namespace EazyRent.Controllers
 
 
 
-        [HttpDelete("/Owner/DeleteProperty/{propertyId}")] 
-        [Authorize(Roles = "Owner")] 
+        [HttpDelete("/Owner/DeleteProperty/{propertyId}")]
+        [Authorize(Roles = "Owner")]
         public async Task<IActionResult> DeleteProperty(int propertyId)
         {
-            
+
             if (propertyId <= 0)
             {
                 return BadRequest("Invalid property ID.");
             }
 
-           
+
             var ownerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(ownerIdString) || !int.TryParse(ownerIdString, out int ownerId))
             {
                 return Unauthorized("Owner ID claim not found or is invalid.");
             }
 
-            
+
             var success = await _property.DeletePropertyAsync(propertyId, ownerId);
 
             if (!success)
             {
-                
+
                 var propertyExists = await _property.GetPropertyByIdAsync(propertyId) != null;
                 if (!propertyExists)
                 {
@@ -198,13 +218,13 @@ namespace EazyRent.Controllers
                 }
                 else
                 {
-                    
+
                     return Forbid("You are not authorized to delete this property.");
                 }
             }
 
-            
-            return Ok("Property deleted successfully."); 
+
+            return Ok("Property deleted successfully.");
         }
 
 

@@ -19,12 +19,11 @@ namespace EazyRent.Models.Repositories
 
         public async Task<List<MaintenanceRequest>> GetAllRequest(int ownerId)
         {
-
             return await _context.MaintenanceRequests
-                          .Include(mr => mr.Property)
-                          .ThenInclude(p => p.Owner) // Assuming navigation property exists
-                          .Where(mr => mr.Property.OwnerId == ownerId).ToListAsync();
-
+                .Include(m => m.Tenant) // Eager load Tenant
+                .Include(m => m.Property)
+                .Where(m => m.Property != null && m.Property.OwnerId == ownerId)
+                .ToListAsync();
         }
 
         public async Task<MaintenanceRequest?> GetRequestById(int id)

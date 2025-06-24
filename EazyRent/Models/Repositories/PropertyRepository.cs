@@ -129,9 +129,18 @@ namespace EazyRent.Models.Repositories
             throw new NotImplementedException();
         }
 
-        public Task<bool> AddPropertyAsync(string ownerEmail, PropertyDetailsDTO dto)
+        public async Task<bool> AddPropertyAsync(string ownerEmail, PropertyDetailsDTO dto)
         {
-            throw new NotImplementedException();
+            var owner = _dbContext.Users.FirstOrDefault(o => o.Email == ownerEmail);
+            if (owner == null)
+                return false;
+
+            var property = _mapper.Map<Property>(dto);
+            property.OwnerId = owner.UserId;
+
+            _dbContext.Properties.Add(property);
+            var result = await _dbContext.SaveChangesAsync();
+            return result > 0;
         }
 
         Task<PropertyDetailsDTO> IProperty.GetPropertyByIdAsync(int propertyId)

@@ -1,13 +1,8 @@
-using System;
-
-namespace EazyRent.Models.DTO
+public class GetPropertiesDTO
 {
-    public class GetPropertiesDTO
-    {
-        public string? Address { get; set; }
-        public decimal? RentAmount { get; set; }
-        public string? AvailabilityStatus { get; set; }
-        public byte[]? PropertyImage { get; set; }
-        public string? PropertyDescription { get; set; }
-    }
+    public string? Address { get; set; }
+    public decimal? RentAmount { get; set; }
+    public string? AvailabilityStatus { get; set; }
+    public string? PropertyImageBase64 { get; set; } // New property
+    public string? PropertyDescription { get; set; }
 }

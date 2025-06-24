@@ -25,7 +25,7 @@ namespace EazyRent.Controllers
         }
 
         // To get all maintenance requests
-        [Authorize(Roles ="Owner")]
+        [Authorize(Roles = "Owner")]
         [HttpGet("/Owner/GetAllMaintenance/")]
         public async Task<IActionResult> GetAllRequests()
         {
@@ -37,10 +37,10 @@ namespace EazyRent.Controllers
             int ownerId = int.Parse(userId);
 
             var requests = await _maintenanceRequestRepository.GetAllRequest(ownerId);
-                var result = _mapper.Map<List<MaintenanceRequestDto>>(requests);
-                return Ok(result);
-            
-            
+            var result = _mapper.Map<List<MaintenanceRequestDto>>(requests);
+            return Ok(result);
+
+
         }
 
 
@@ -59,8 +59,8 @@ namespace EazyRent.Controllers
         }
 
 
-        [Authorize(Roles ="Tenant")]
-       [HttpGet("/Tenant/GetAllMaintenance/")]
+        [Authorize(Roles = "Tenant")]
+        [HttpGet("/Tenant/GetAllMaintenance/")]
         public async Task<IActionResult> GetAllRequestsByTenant()
         {
             // Extract the UserId from the JWT claims
@@ -86,30 +86,38 @@ namespace EazyRent.Controllers
         [HttpPost("/Tenant/CreateMaintenanceRequest/")]
         public async Task<IActionResult> AddRequest([FromBody] MaintenanceRequestDto requestDto)
         {
-                // Extract the UserId from the JWT claims
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-               
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Unauthorized("User ID not found in token.");
-                }
-                  int loggedInTenantId = int.Parse(userId);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            // Validate that the tenant has a lease on the property
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("User ID not found in token.");
+            }
+
+            int loggedInTenantId = int.Parse(userId); // ✅ Use this instead of requestDto.TenantId
+
+            // ✅ Validate that the tenant has a lease on the property
             if (!requestDto.PropertyId.HasValue)
-                {
-                    return BadRequest("Property ID is required.");
-                }
-                var lease = await _maintenanceRequestRepository.GetLeaseByPropertyIdAndTenantId(requestDto.PropertyId.Value, loggedInTenantId);
-                if (lease == null || string.IsNullOrEmpty(lease.Status) || lease.Status.ToLower() != "active")
-                {
-                    return BadRequest("Tenant does not have an active lease on the specified property.");
-                }
+            {
+                return BadRequest("Property ID is required.");
+            }
 
-                var request = _mapper.Map<MaintenanceRequest>(requestDto);
-                await _maintenanceRequestRepository.AddRequest(request);
-                return CreatedAtAction(nameof(GetRequestById), new { id = request.RequestId }, requestDto);
+            var lease = await _maintenanceRequestRepository
+                .GetLeaseByPropertyIdAndTenantId(requestDto.PropertyId.Value, loggedInTenantId);
+
+            if (lease == null || string.IsNullOrEmpty(lease.Status) || lease.Status.ToLower() != "active")
+            {
+                return BadRequest("Tenant does not have an active lease on the specified property.");
+            }
+
+            // ✅ Map and override tenantId to ensure security
+            var request = _mapper.Map<MaintenanceRequest>(requestDto);
+            request.TenantId = loggedInTenantId;
+
+            await _maintenanceRequestRepository.AddRequest(request);
+
+            return CreatedAtAction(nameof(GetRequestById), new { id = request.RequestId }, requestDto);
         }
+
 
         // Adjusting the method to update maintenance status using PropertyId
         [Authorize(Roles = "Owner")]
@@ -122,14 +130,14 @@ namespace EazyRent.Controllers
                 var loggedInOwnerId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(loggedInOwnerId))
                 {
-                    return Unauthorized("User ID not found in token.");
+                    return Unauthorized(new { Message = "User ID not found in token." });
                 }
 
                 // Validate that the owner owns the property linked to the maintenance request
                 var maintenanceRequest = await _maintenanceRequestRepository.GetRequestById(requestId);
                 if (maintenanceRequest == null || maintenanceRequest.Property == null || maintenanceRequest.Property.OwnerId.ToString() != loggedInOwnerId)
                 {
-                    return BadRequest("Owner does not own the property linked to the specified maintenance request.");
+                    return BadRequest(new { Message = "Owner does not own the property linked to the specified maintenance request." });
                 }
 
                 // Update the maintenance status
