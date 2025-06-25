@@ -6,14 +6,9 @@ namespace EazyRent.Models.Repositories
     public interface ILease
     {
         Task<Lease?> CreateLeaseRequestAsync(int tenantId, CreateLeaseDTO createLeaseDto);
-        //Task<LeaseDetailsDTO?> GetLeaseByIdAsync(int leaseId);
-        Task<IEnumerable<LeaseDetailsDTO>> GetLeasesByTenantIdAsync(int tenantId);
+        Task<IEnumerable<GetLeaseDetailsDTO>> GetLeasesByTenantIdAsync(int tenantId); // <-- Changed here
         Task<IEnumerable<LeaseDetailsDTO>> GetLeasesByOwnerIdAsync(int ownerId);
-
-
         Task<Lease> GetLeaseByIdAsync(int leaseId);
         Task<bool> UpdateLeaseAsync(Lease lease);
-
-
     }
 }

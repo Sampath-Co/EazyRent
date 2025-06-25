@@ -148,20 +148,13 @@ namespace EazyRent.Models.Repositories
             throw new NotImplementedException();
         }
 
-        Task<IEnumerable<PropertyDetailsDTO>> IProperty.GetPropertiesForOwnerAsync(int ownerId)
-        {
-            var properties =  _dbContext.Properties
-           .Where(p => p.OwnerId == ownerId)
-           .ToListAsync();
-
-            return _mapper.Map<PropertyDetailsDTO>(
-                )
-
-        }
+        // Removed explicit interface implementation for GetPropertiesForOwnerAsync because it does not exist in IProperty interface.
 
         public Task<bool> UpdatePropertyAsync(int propertyId, int ownerId, PropertyDetailsDTO updatedPropertyDetails)
         {
             throw new NotImplementedException();
         }
+
+
     }
 }

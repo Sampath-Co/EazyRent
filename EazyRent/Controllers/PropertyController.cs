@@ -51,7 +51,7 @@ namespace EazyRent.Controllers
 
             if (string.IsNullOrEmpty(ownerIdString) || !int.TryParse(ownerIdString, out int ownerId))
             {
-                return Unauthorized("Owner ID claim not found or is invalid in token.");
+                return Unauthorized(new { Message = "Owner ID claim not found or is invalid in token." });
             }
 
             try
@@ -60,7 +60,7 @@ namespace EazyRent.Controllers
 
                 if (properties == null || !properties.Any())
                 {
-                    return NoContent();
+                    return NotFound(new { Message = "No property found for this owner." });
                 }
 
                 return Ok(properties);

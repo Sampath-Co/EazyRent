@@ -43,11 +43,11 @@ namespace EazyRent.Models.Repositories
             {
                 PropertyId = createLeaseDto.PropertyId,
                 TenantId = tenantId,
-                StartDate = createLeaseDto.StartDate,
-                EndDate = createLeaseDto.EndDate,
-                RentAmount = createLeaseDto.ProposedRentAmount ?? property.RentAmount,
+                StartDate = DateOnly.FromDateTime(createLeaseDto.StartDate),
+                EndDate = DateOnly.FromDateTime(createLeaseDto.EndDate),
+                RentAmount = property.RentAmount ?? createLeaseDto.ProposedRentAmount,
                 Status = "Pending",
-                DigitalSignature = createLeaseDto.DigitalSignatureBase64 != null ? Convert.FromBase64String(createLeaseDto.DigitalSignatureBase64) : null
+                DigitalSignature = createLeaseDto.DigitalSignature != null ? ConvertFormFileToByteArray(createLeaseDto.DigitalSignature) : null
             };
 
             _dbContext.Leases.Add(newLease);
@@ -63,33 +63,23 @@ namespace EazyRent.Models.Repositories
                 .FirstOrDefaultAsync(l => l.LeaseId == leaseId);
         }
 
-        public async Task<IEnumerable<LeaseDetailsDTO>> GetLeasesByTenantIdAsync(int tenantId)
+        public async Task<IEnumerable<GetLeaseDetailsDTO>> GetLeasesByTenantIdAsync(int tenantId)
         {
             var leases = await _dbContext.Leases
-                                         .Where(l => l.TenantId == tenantId) // Crucial filter for the specific tenant
-                                         .Include(l => l.Property)           // Eager load Property details
-                                         .Include(l => l.Tenant)             // Eager load Tenant details
-                                         .ToListAsync(); // Get all matching leases
+                .Include(l => l.Tenant)
+                .Include(l => l.Property)
+                .Where(l => l.TenantId == tenantId)
+                .ToListAsync();
 
-            if (!leases.Any()) // If no leases found, return an empty collection
+            return leases.Select(lease => new GetLeaseDetailsDTO
             {
-                return Enumerable.Empty<LeaseDetailsDTO>();
-            }
-
-            // Map the list of Lease entities to a list of LeaseDetailsDTOs
-            var leaseDetailsDtos = leases.Select(lease => new LeaseDetailsDTO
-            {
-                LeaseId = lease.LeaseId,
-                PropertyId = lease.PropertyId,
-                TenantId = lease.TenantId,
-                StartDate = lease.StartDate,
-                EndDate = lease.EndDate,
-                RentAmount = lease.RentAmount,
-                Status = lease.Status,
-                DigitalSignature = lease.DigitalSignature
+                PropertyId = lease.PropertyId ?? 0,
+                TenantName = lease.Tenant != null ? lease.Tenant.FullName : null, // <-- Use Tenant's name
+                StartDate = lease.StartDate.HasValue ? lease.StartDate.Value.ToDateTime(TimeOnly.MinValue) : default(DateTime),
+                EndDate = lease.EndDate.HasValue ? lease.EndDate.Value.ToDateTime(TimeOnly.MinValue) : default(DateTime),
+                RentAmount = lease.RentAmount ?? 0,
+                Status = lease.Status
             }).ToList();
-
-            return leaseDetailsDtos;
         }
 
         public async Task<IEnumerable<LeaseDetailsDTO>> GetLeasesByOwnerIdAsync(int ownerId)
@@ -114,6 +104,13 @@ namespace EazyRent.Models.Repositories
         {
             _dbContext.Leases.Update(lease);
             return await _dbContext.SaveChangesAsync() > 0;
+        }
+
+        private static byte[] ConvertFormFileToByteArray(IFormFile file)
+        {
+            using var ms = new MemoryStream();
+            file.CopyTo(ms);
+            return ms.ToArray();
         }
     }
 }
