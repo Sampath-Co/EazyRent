@@ -30,6 +30,15 @@ namespace EazyRent.Mappings
              src.PropertyImage != null ? ConvertFormFileToByteArray(src.PropertyImage) : null
              ))
              .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<Lease, GetLeaseDetailsDTO>()
+                .ForMember(dest => dest.TenantName, opt => opt.MapFrom(src => src.Tenant.FullName));
+
+            CreateMap<CreateLeaseDTO, Lease>()
+                .ForMember(dest => dest.DigitalSignature, opt => opt.MapFrom(src =>
+                    src.DigitalSignature != null ? ConvertFormFileToByteArray(src.DigitalSignature) : null
+                ))
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
         }
 
         private static byte[] ConvertFormFileToByteArray(IFormFile file)

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using EazyRent.Models.Domains;
 using EazyRent.Data; 
+using System.IO;
 
 namespace EazyRent.Controllers
 {
@@ -29,11 +30,11 @@ namespace EazyRent.Controllers
 
         [Authorize(Roles = "Tenant")]
         [HttpPost("Tenant/RequestLease")]
-        public async Task<IActionResult> RequestLease([FromBody] CreateLeaseDTO createLeaseDto)
+        public async Task<IActionResult> RequestLease([FromForm] CreateLeaseDTO createLeaseDto)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new { Errors = ModelState });
             }
 
             try
@@ -44,6 +45,28 @@ namespace EazyRent.Controllers
                     throw new UnauthorizedAccessException("Tenant ID claim not found or is invalid in token.");
                 }
 
+                // --- Digital Signature File Save Logic (optional, for debugging or audit) ---
+                if (createLeaseDto.DigitalSignature != null)
+                {
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "signatures");
+                    if (!Directory.Exists(uploadsFolder))
+                    {
+                        Directory.CreateDirectory(uploadsFolder);
+                    }
+                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + createLeaseDto.DigitalSignature.FileName;
+                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await createLeaseDto.DigitalSignature.CopyToAsync(fileStream);
+                    }
+                }
+                else
+                {
+                    return BadRequest(new { Message = "No digital signature uploaded." });
+                }
+                // --------------------------------------------------------------------------
+
                 var newLease = await _leaseRepository.CreateLeaseRequestAsync(tenantId, createLeaseDto);
 
                 if (newLease == null)
@@ -51,17 +74,16 @@ namespace EazyRent.Controllers
                     throw new Exception("Could not create lease request.");
                 }
 
-                
                 var payment = new Payment
                 {
                     LeaseId = newLease.LeaseId,
                     Amount = createLeaseDto.ProposedRentAmount,
                     Status = "Pending"
-                }; 
+                };
 
                 await _paymentRepository.AddPaymentAsync(payment);
 
-                return Ok("Lease and initial payment created.");
+                return Ok(new { Message = "Lease and initial payment created." });
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -134,25 +156,21 @@ namespace EazyRent.Controllers
         [Authorize(Roles = "Tenant")] 
         public async Task<IActionResult> GetMyLeasesAsTenant()
         {
-            
             var tenantIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (string.IsNullOrEmpty(tenantIdString) || !int.TryParse(tenantIdString, out int tenantId))
             {
-                
                 return Unauthorized("Tenant ID claim not found or is invalid in token.");
             }
 
             var leases = await _leaseRepository.GetLeasesByTenantIdAsync(tenantId);
 
-          
             if (!leases.Any()) 
             {
                 return NoContent(); 
             }
 
-         
-            return Ok(leases); 
+            return Ok(leases); // Now returns IEnumerable<GetLeaseDetailsDTO>
         }
 
        
