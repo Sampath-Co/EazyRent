@@ -150,7 +150,13 @@ namespace EazyRent.Models.Repositories
 
         Task<IEnumerable<PropertyDetailsDTO>> IProperty.GetPropertiesForOwnerAsync(int ownerId)
         {
-            throw new NotImplementedException();
+            var properties =  _dbContext.Properties
+           .Where(p => p.OwnerId == ownerId)
+           .ToListAsync();
+
+            return _mapper.Map<PropertyDetailsDTO>(
+                )
+
         }
 
         public Task<bool> UpdatePropertyAsync(int propertyId, int ownerId, PropertyDetailsDTO updatedPropertyDetails)
