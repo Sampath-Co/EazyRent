@@ -109,19 +109,26 @@ namespace EazyRent.Models.Repositories
             return true;
         }
 
-        public async Task<bool> DeletePropertyAsync(int propertyId, int ownerId)
+        public async Task<(bool Success, bool HasLeases)> DeletePropertyAsync(int propertyId, int ownerId)
         {
             var propertyToDelete = await _dbContext.Properties
                 .FirstOrDefaultAsync(p => p.PropertyId == propertyId);
 
             if (propertyToDelete == null || propertyToDelete.OwnerId != ownerId)
             {
-                return false;
+                return (false, false);
+            }
+
+            // Check for existing leases
+            bool hasLeases = await _dbContext.Leases.AnyAsync(l => l.PropertyId == propertyId);
+            if (hasLeases)
+            {
+                return (false, true);
             }
 
             _dbContext.Properties.Remove(propertyToDelete);
             await _dbContext.SaveChangesAsync();
-            return true;
+            return (true, false);
         }
 
         PropertyDetailsDTO IProperty.DisplayOwnerProperty(int ownerId)
@@ -148,12 +155,18 @@ namespace EazyRent.Models.Repositories
             throw new NotImplementedException();
         }
 
-        public Task<PropertyDetailsDTO> GetPropertyByIdAndOwnerIdAsync(int propertyId,int ownerId)
+        public async Task<PropertyDetailsDTO> GetPropertyByIdAndOwnerIdAsync(int propertyId, int ownerId)
         {
-            return _dbContext.Properties
-                .Where(p => p.PropertyId == propertyId && p.OwnerId == ownerId)
-                .Select(p => _mapper.Map<PropertyDetailsDTO>(p))
-                .FirstOrDefaultAsync();
+            var property = await _dbContext.Properties
+                .FirstOrDefaultAsync(p => p.PropertyId == propertyId);
+
+            if (property == null)
+                return null; // Property does not exist
+
+            if (property.OwnerId != ownerId)
+                return null; // Owner does not match
+
+            return _mapper.Map<PropertyDetailsDTO>(property);
         }
 
 

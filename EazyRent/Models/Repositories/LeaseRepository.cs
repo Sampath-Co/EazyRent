@@ -106,6 +106,18 @@ namespace EazyRent.Models.Repositories
             return await _dbContext.SaveChangesAsync() > 0;
         }
 
+        public async Task<bool> DeleteLeaseByOwnerAsync(int leaseId, int ownerId)
+        {
+            var lease = await _dbContext.Leases.Include(l => l.Property).FirstOrDefaultAsync(l => l.LeaseId == leaseId);
+            if (lease == null || lease.Property == null || lease.Property.OwnerId != ownerId)
+            {
+                return false;
+            }
+            _dbContext.Leases.Remove(lease);
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
+
         private static byte[] ConvertFormFileToByteArray(IFormFile file)
         {
             using var ms = new MemoryStream();

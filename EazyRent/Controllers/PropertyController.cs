@@ -160,47 +160,25 @@ namespace EazyRent.Controllers
             }
 
             // 2. Get the current authenticated owner's ID
-            // This assumes your authentication system stores the user ID in the NameIdentifier claim.
             var ownerIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (ownerIdClaim == null)
             {
-                // This should ideally not happen if [Authorize] works correctly,
-                // but it's good practice for robustness.
                 return Unauthorized("Owner ID not found in claims.");
             }
 
-            // You might need to parse the ownerId to the correct type (e.g., int, Guid, string)
-            // For example, if ownerId is an int:
             if (!int.TryParse(ownerIdClaim.Value, out int ownerId))
             {
                 return Unauthorized("Invalid Owner ID format.");
             }
 
             // 3. Retrieve the property and check ownership
-            // This assumes your _property service has a method like GetPropertyByIdAndOwnerIdAsync
-            // that fetches the property AND verifies its ownership in one go, or you do the check here.
-            // Example 1: Service handles ownership check
             var property = await _property.GetPropertyByIdAndOwnerIdAsync(propertyId, ownerId);
 
             if (property == null)
             {
                 // Return NotFound if the property doesn't exist OR if it exists but doesn't belong to the current owner.
-                // This prevents disclosing information about properties owned by other users.
                 return NotFound($"Property with ID {propertyId} not found or you do not have access to it.");
             }
-
-            // Example 2: Service fetches by ID, and controller checks ownership (less efficient if service can filter)
-            // var property = await _property.GetPropertyByIdAsync(propertyId);
-            // if (property == null)
-            // {
-            //     return NotFound($"Property with ID {propertyId} not found.");
-            // }
-            //
-            // // Assuming your Property model has an OwnerId property
-            // if (property.OwnerId != ownerId)
-            // {
-            //     return Forbid("You do not have permission to access this property.");
-            // }
 
             // 4. Return the property if found and owned by the current user
             return Ok(property);
@@ -262,21 +240,24 @@ namespace EazyRent.Controllers
                 return Unauthorized(new { message = "Owner ID claim not found or is invalid." });
             }
 
-            var success = await _property.DeletePropertyAsync(propertyId, ownerId);
+            var (success, hasLeases) = await _property.DeletePropertyAsync(propertyId, ownerId);
 
             if (!success)
             {
+                if (hasLeases)
+                {
+                    return StatusCode(StatusCodes.Status409Conflict, new { message = "Cannot delete property. There are active leases for this property. Please delete all leases first." });
+                }
+
                 var propertyExists = await _property.GetPropertyByIdAsync(propertyId) != null;
                 if (!propertyExists)
                 {
                     return NotFound(new { message = $"Property with ID {propertyId} not found." });
                 }
-
                 else
                 {
                     return StatusCode(StatusCodes.Status403Forbidden, new { message = "You are not authorized to delete this property." });
                 }
-
             }
 
             return Ok(new { message = "Property deleted successfully." });

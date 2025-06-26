@@ -10,5 +10,6 @@ namespace EazyRent.Models.Repositories
         Task<IEnumerable<LeaseDetailsDTO>> GetLeasesByOwnerIdAsync(int ownerId);
         Task<Lease> GetLeaseByIdAsync(int leaseId);
         Task<bool> UpdateLeaseAsync(Lease lease);
+        Task<bool> DeleteLeaseByOwnerAsync(int leaseId, int ownerId);
     }
 }

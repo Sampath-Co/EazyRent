@@ -58,5 +58,29 @@ namespace EazyRent.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An error occurred while processing the lease request.", Details = ex.Message });
             }
         }
+
+        [Authorize(Roles = "Owner")]
+        [HttpDelete("/Owner/DeleteLease/{leaseId}")]
+        public async Task<IActionResult> DeleteLease(int leaseId)
+        {
+            if (leaseId <= 0)
+            {
+                return BadRequest(new { message = "Invalid lease ID." });
+            }
+
+            var ownerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(ownerIdString) || !int.TryParse(ownerIdString, out int ownerId))
+            {
+                return Unauthorized(new { message = "Owner ID claim not found or is invalid." });
+            }
+
+            var success = await _leaseRepository.DeleteLeaseByOwnerAsync(leaseId, ownerId);
+            if (!success)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = "You are not authorized to delete this lease or lease not found." });
+            }
+
+            return Ok(new { message = "Lease deleted successfully." });
+        }
     }
 }
