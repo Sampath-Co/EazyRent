@@ -149,6 +149,65 @@ namespace EazyRent.Controllers
             return Ok(property);
         }
 
+        [Authorize(Roles = "Owner")]
+        [HttpGet("/Owner/GetPropertyById/{propertyId}")]
+        public async Task<IActionResult> GetPropertyByIdAsync(int propertyId)
+        {
+            // 1. Basic validation for property ID
+            if (propertyId <= 0)
+            {
+                return BadRequest("Invalid property ID.");
+            }
+
+            // 2. Get the current authenticated owner's ID
+            // This assumes your authentication system stores the user ID in the NameIdentifier claim.
+            var ownerIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (ownerIdClaim == null)
+            {
+                // This should ideally not happen if [Authorize] works correctly,
+                // but it's good practice for robustness.
+                return Unauthorized("Owner ID not found in claims.");
+            }
+
+            // You might need to parse the ownerId to the correct type (e.g., int, Guid, string)
+            // For example, if ownerId is an int:
+            if (!int.TryParse(ownerIdClaim.Value, out int ownerId))
+            {
+                return Unauthorized("Invalid Owner ID format.");
+            }
+
+            // 3. Retrieve the property and check ownership
+            // This assumes your _property service has a method like GetPropertyByIdAndOwnerIdAsync
+            // that fetches the property AND verifies its ownership in one go, or you do the check here.
+            // Example 1: Service handles ownership check
+            var property = await _property.GetPropertyByIdAndOwnerIdAsync(propertyId, ownerId);
+
+            if (property == null)
+            {
+                // Return NotFound if the property doesn't exist OR if it exists but doesn't belong to the current owner.
+                // This prevents disclosing information about properties owned by other users.
+                return NotFound($"Property with ID {propertyId} not found or you do not have access to it.");
+            }
+
+            // Example 2: Service fetches by ID, and controller checks ownership (less efficient if service can filter)
+            // var property = await _property.GetPropertyByIdAsync(propertyId);
+            // if (property == null)
+            // {
+            //     return NotFound($"Property with ID {propertyId} not found.");
+            // }
+            //
+            // // Assuming your Property model has an OwnerId property
+            // if (property.OwnerId != ownerId)
+            // {
+            //     return Forbid("You do not have permission to access this property.");
+            // }
+
+            // 4. Return the property if found and owned by the current user
+            return Ok(property);
+        }
+
+
+
 
 
         [HttpPut("/Owner/UpdateProperty/{propertyId}")]
@@ -192,41 +251,36 @@ namespace EazyRent.Controllers
         [Authorize(Roles = "Owner")]
         public async Task<IActionResult> DeleteProperty(int propertyId)
         {
-
             if (propertyId <= 0)
             {
-                return BadRequest("Invalid property ID.");
+                return BadRequest(new { message = "Invalid property ID." });
             }
-
 
             var ownerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(ownerIdString) || !int.TryParse(ownerIdString, out int ownerId))
             {
-                return Unauthorized("Owner ID claim not found or is invalid.");
+                return Unauthorized(new { message = "Owner ID claim not found or is invalid." });
             }
-
 
             var success = await _property.DeletePropertyAsync(propertyId, ownerId);
 
             if (!success)
             {
-
                 var propertyExists = await _property.GetPropertyByIdAsync(propertyId) != null;
                 if (!propertyExists)
                 {
-                    return NotFound($"Property with ID {propertyId} not found.");
+                    return NotFound(new { message = $"Property with ID {propertyId} not found." });
                 }
+
                 else
                 {
-
-                    return Forbid("You are not authorized to delete this property.");
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You are not authorized to delete this property." });
                 }
+
             }
 
-
-            return Ok("Property deleted successfully.");
+            return Ok(new { message = "Property deleted successfully." });
         }
-
-
     }
+
 }
