@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Linq;
 
 namespace EazyRent.Controllers
 {
@@ -12,12 +13,13 @@ namespace EazyRent.Controllers
     public class OwnerController : ControllerBase
     {
         private readonly ILease _leaseRepository;
-        public OwnerController(ILease leaseRepository)
+        private readonly IPayment _paymentRepository;
+
+        public OwnerController(ILease leaseRepository, IPayment paymentRepository)
         {
             _leaseRepository = leaseRepository;
+            _paymentRepository = paymentRepository;
         }
-
-        //public LeaseRepository LeaseRepository { get; }
 
         [Authorize(Roles = "Owner")]
         [HttpPost("/Owner/ApproveRejectLease")]
@@ -74,13 +76,34 @@ namespace EazyRent.Controllers
                 return Unauthorized(new { message = "Owner ID claim not found or is invalid." });
             }
 
+            // Retrieve the lease to ensure it exists and check owner authorization.
+            var lease = await _leaseRepository.GetLeaseByIdAsync(leaseId);
+            if (lease == null || lease.Property == null || lease.Property.OwnerId != ownerId)
+            {
+                return NotFound(new { message = "Lease not found or you are not authorized to delete this lease." });
+            }
+
+            // Retrieve related payments.
+            var payments = await _paymentRepository.GetPaymentsByLeaseIdAsync(leaseId);
+            if (payments != null && payments.Any())
+            {
+                // Check if all related payments are marked as "Paid".
+                bool allPaid = payments.All(p => p.Status.Equals("Paid", System.StringComparison.OrdinalIgnoreCase));
+                if (!allPaid)
+                {
+                    return BadRequest(new { message = "Please complete payment first." });
+                }
+                // Delete payments before deleting the lease.
+                await _paymentRepository.DeletePaymentsByLeaseIdAsync(leaseId);
+            }
+
             var success = await _leaseRepository.DeleteLeaseByOwnerAsync(leaseId, ownerId);
             if (!success)
             {
                 return StatusCode(StatusCodes.Status403Forbidden, new { message = "You are not authorized to delete this lease or lease not found." });
             }
 
-            return Ok(new { message = "Lease deleted successfully." });
+            return Ok(new { message = "Lease and associated payments deleted successfully." });
         }
     }
 }

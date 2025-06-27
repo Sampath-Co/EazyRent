@@ -56,5 +56,19 @@ namespace EazyRent.Models.Repositories
             await _dbContext.SaveChangesAsync();
             return payment; 
         }
+
+        public async Task<bool> DeletePaymentsByLeaseIdAsync(int leaseId)
+        {
+            var payments = await _dbContext.Payments
+                                     .Where(p => p.LeaseId == leaseId)
+                                     .ToListAsync();
+            if (payments.Any())
+            {
+                _dbContext.Payments.RemoveRange(payments);
+                await _dbContext.SaveChangesAsync();
+                return true;
+            }
+            return false;
+        }
     }
 }

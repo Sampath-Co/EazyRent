@@ -12,6 +12,6 @@ namespace EazyRent.Models.Repositories
         Task<IEnumerable<GetPropertiesDTO>> GetAllPropertiesAsync( string? filterOn = null, string? filterQuery = null, decimal? filterRent = null);
         Task<IEnumerable<GetPropertiesDTO>> GetPropertiesForOwnerAsync(int ownerId);
         Task<bool> UpdatePropertyAsync(int propertyId, int ownerId, PropertyDetailsDTO updatedPropertyDetails);
-        Task<bool> DeletePropertyAsync(int propertyId, int ownerId);
+        Task<(bool Success, bool HasLeases)> DeletePropertyAsync(int propertyId, int ownerId);
     }
 }

@@ -15,6 +15,6 @@ namespace EazyRent.Models.Repositories
         //Task<Payment> AddPaymentAsync(Payment payment);
         //Task<Payment> GetPaymentByIdAsync(int paymentId);
         //Task<bool> UpdatePaymentAsync(Payment payment);
-
+        Task<bool> DeletePaymentsByLeaseIdAsync(int leaseId);
     }
 }

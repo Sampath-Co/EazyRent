@@ -150,5 +150,47 @@ namespace EazyRent.Controllers
                 return StatusCode(500, new { Message = "An error occurred while updating the maintenance status.", Details = ex.Message });
             }
         }
+
+        [Authorize(Roles = "Owner")]
+        [HttpDelete("/Owner/DeleteMaintenance/{requestId:int}")]
+        public async Task<IActionResult> DeleteMaintenanceRequest([FromRoute] int requestId)
+        {
+            if (requestId <= 0)
+            {
+                return BadRequest(new { message = "Invalid maintenance request ID." });
+            }
+
+            var ownerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(ownerIdString) || !int.TryParse(ownerIdString, out int ownerId))
+            {
+                return Unauthorized(new { message = "Owner ID claim not found or is invalid." });
+            }
+
+            // Retrieve the maintenance request.
+            MaintenanceRequest maintenanceRequest;
+            try
+            {
+                maintenanceRequest = await _maintenanceRequestRepository.GetRequestById(requestId);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+
+            // Check if maintenance request belongs to the owner.
+            if (maintenanceRequest.Property == null || maintenanceRequest.Property.OwnerId != ownerId)
+            {
+                return Unauthorized(new { message = "You are not authorized to delete this maintenance request." });
+            }
+
+            // Only allow deletion if the maintenance status is "terminated"
+            if (!maintenanceRequest.Status.Equals("terminated", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(new { message = "Maintenance request cannot be deleted. Its status must be terminated first." });
+            }
+
+            await _maintenanceRequestRepository.DeleteRequest(requestId);
+            return Ok(new { message = "Maintenance request deleted successfully." });
+        }
     }
 }

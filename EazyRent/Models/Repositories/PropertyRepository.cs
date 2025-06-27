@@ -16,7 +16,7 @@ namespace EazyRent.Models.Repositories
             _dbContext = rentalDBContext;
             _mapper = mapper;
         }
-
+// 
         public GetPropertiesDTO DisplayOwnerProperty(int ownerId)
         {
             var property = _dbContext.Properties
