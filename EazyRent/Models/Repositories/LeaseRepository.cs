@@ -92,10 +92,14 @@ namespace EazyRent.Models.Repositories
                 {
                     LeaseId = l.LeaseId,
                     PropertyId = l.PropertyId,
+                    TenantId = l.TenantId, // Keep TenantId for reference
                     StartDate = l.StartDate,
                     EndDate = l.EndDate,
                     RentAmount = l.RentAmount,
-                    Status = l.Status
+                    Status = l.Status,
+                    DigitalSignature = l.DigitalSignature,
+                    // Use Tenant's name instead of TenantId
+                    TenantName = l.Tenant != null ? l.Tenant.FullName : null
                 })
                 .ToListAsync();
         }

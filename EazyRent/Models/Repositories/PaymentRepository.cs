@@ -70,5 +70,49 @@ namespace EazyRent.Models.Repositories
             }
             return false;
         }
+
+        // New Method: Get Payments for Owner
+        public async Task<IEnumerable<PaymentDTO>> GetPaymentsForOwnerAsync(int ownerId)
+        {
+            var payments = await _dbContext.Payments
+                .Include(p => p.Lease)
+                .ThenInclude(l => l.Property)
+                .Where(p => p.Lease.Property.OwnerId == ownerId)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<PaymentDTO>>(payments);
+        }
+
+        // New Method: Get Payments for Tenant
+        public async Task<IEnumerable<PaymentDTO>> GetPaymentsForTenantAsync(int tenantId)
+        {
+            var payments = await _dbContext.Payments
+                .Include(p => p.Lease)
+                .Where(p => p.Lease.TenantId == tenantId)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<PaymentDTO>>(payments);
+        }
+
+        // New Method: Update Payment Status
+        public async Task<bool> UpdatePaymentStatusAsync(int leaseId, string status)
+        {
+            var payments = await _dbContext.Payments
+                .Where(p => p.LeaseId == leaseId)
+                .ToListAsync();
+
+            if (!payments.Any())
+            {
+                return false;
+            }
+
+            foreach (var payment in payments)
+            {
+                payment.Status = status;
+            }
+
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
     }
 }
