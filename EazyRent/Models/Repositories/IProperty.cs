@@ -7,8 +7,8 @@ namespace EazyRent.Models.Repositories
     {
         PropertyDetailsDTO DisplayOwnerProperty(int ownerId);
         Task<bool> AddPropertyAsync(string ownerEmail, PropertyDetailsDTO dto);
-        Task<PropertyDetailsDTO> GetPropertyByIdAsync(int propertyId);
-        Task<PropertyDetailsDTO> GetPropertyByIdAndOwnerIdAsync(int propertyId, int ownerId);
+        Task<GetPropertiesDTO> GetPropertyByIdAsync(int propertyId);
+        Task<GetPropertiesDTO> GetPropertyByIdAndOwnerIdAsync(int propertyId, int ownerId);
         Task<IEnumerable<GetPropertiesDTO>> GetAllPropertiesAsync( string? filterOn = null, string? filterQuery = null, decimal? filterRent = null);
         Task<IEnumerable<GetPropertiesDTO>> GetPropertiesForOwnerAsync(int ownerId);
         Task<bool> UpdatePropertyAsync(int propertyId, int ownerId, PropertyDetailsDTO updatedPropertyDetails);

@@ -150,12 +150,7 @@ namespace EazyRent.Models.Repositories
             return result > 0;
         }
 
-        Task<PropertyDetailsDTO> IProperty.GetPropertyByIdAsync(int propertyId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<PropertyDetailsDTO> GetPropertyByIdAndOwnerIdAsync(int propertyId, int ownerId)
+        public async Task<GetPropertiesDTO> GetPropertyByIdAndOwnerIdAsync(int propertyId, int ownerId)
         {
             var property = await _dbContext.Properties
                 .FirstOrDefaultAsync(p => p.PropertyId == propertyId);
@@ -166,7 +161,7 @@ namespace EazyRent.Models.Repositories
             if (property.OwnerId != ownerId)
                 return null; // Owner does not match
 
-            return _mapper.Map<PropertyDetailsDTO>(property);
+            return _mapper.Map<GetPropertiesDTO>(property);
         }
 
 
