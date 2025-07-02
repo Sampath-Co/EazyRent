@@ -50,7 +50,7 @@ namespace EazyRent.Controllers
             // Create an initial payment for the lease
             var payment = new Payment
             {
-                LeaseId = newLease.LeaseId,
+                LeaseId = newLease.LeaseId, 
                 Amount = createLeaseDto.ProposedRentAmount,
                 PaymentDate = DateOnly.FromDateTime(DateTime.Now), // Set the current date as PaymentDate
                 Status = "Pending"

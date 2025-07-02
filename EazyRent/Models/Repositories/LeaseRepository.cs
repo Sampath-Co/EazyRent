@@ -73,8 +73,9 @@ namespace EazyRent.Models.Repositories
 
             return leases.Select(lease => new GetLeaseDetailsDTO
             {
+                LeaseId = lease.LeaseId, // Include LeaseId
                 PropertyId = lease.PropertyId ?? 0,
-                TenantName = lease.Tenant != null ? lease.Tenant.FullName : null, // <-- Use Tenant's name
+                TenantName = lease.Tenant != null ? lease.Tenant.FullName : null,
                 StartDate = lease.StartDate.HasValue ? lease.StartDate.Value.ToDateTime(TimeOnly.MinValue) : default(DateTime),
                 EndDate = lease.EndDate.HasValue ? lease.EndDate.Value.ToDateTime(TimeOnly.MinValue) : default(DateTime),
                 RentAmount = lease.RentAmount ?? 0,

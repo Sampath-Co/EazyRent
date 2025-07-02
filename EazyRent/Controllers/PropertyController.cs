@@ -193,42 +193,42 @@ namespace EazyRent.Controllers
 
 
 
-
         [HttpPut("/Owner/UpdateProperty/{propertyId}")]
         [Authorize(Roles = "Owner")]
-        public async Task<IActionResult> UpdateProperty(int propertyId, [FromBody] PropertyDetailsDTO updatedPropertyDetails)
+        public async Task<IActionResult> UpdateProperty(int propertyId, [FromForm] PropertyDetailsDTO updatedPropertyDetails)
         {
-
             if (propertyId <= 0)
             {
-                return BadRequest("Invalid property ID.");
+                return BadRequest(new { message = "Invalid property ID." });
             }
 
             if (updatedPropertyDetails == null)
             {
-                return BadRequest("Property details cannot be null.");
+                return BadRequest(new { message = "Property details cannot be null." });
             }
+
             var ownerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(ownerIdString) || !int.TryParse(ownerIdString, out int ownerId))
             {
-                return Unauthorized("Owner ID claim not found or is invalid.");
+                return Unauthorized(new { message = "Owner ID claim not found or is invalid." });
             }
+
             var success = await _property.UpdatePropertyAsync(propertyId, ownerId, updatedPropertyDetails);
             if (!success)
             {
                 var propertyExists = await _property.GetPropertyByIdAsync(propertyId) != null;
                 if (!propertyExists)
                 {
-                    return NotFound($"Property with ID {propertyId} not found.");
+                    return NotFound(new { message = $"Property with ID {propertyId} not found." });
                 }
                 else
                 {
                     return Forbid("You are not authorized to update this property.");
                 }
             }
-            return Ok("Property updated successfully.");
-        }
 
+            return Ok(new { message = "Property updated successfully." });
+        }
 
 
         [HttpDelete("/Owner/DeleteProperty/{propertyId}")]
