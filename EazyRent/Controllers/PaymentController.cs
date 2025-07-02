@@ -10,6 +10,7 @@ namespace EazyRent.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Produces("application/json")]
     public class PaymentController : ControllerBase
     {
         private readonly IPayment _paymentRepository;
@@ -83,7 +84,7 @@ namespace EazyRent.Controllers
 
                 if (createdPayment == null)
                 {
-                    return StatusCode(StatusCodes.Status500InternalServerError, "Failed to create payment.");
+                    return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "Failed to create payment." });
                 }
 
                 var createdDto = _mapper.Map<PaymentDTO>(createdPayment);

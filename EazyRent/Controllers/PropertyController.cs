@@ -8,6 +8,7 @@ namespace EazyRent.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Produces("application/json")]
     public class PropertyController : ControllerBase
     {
         private readonly IProperty _property;
@@ -190,7 +191,7 @@ namespace EazyRent.Controllers
 
         [HttpPut("/Owner/UpdateProperty/{propertyId}")]
         [Authorize(Roles = "Owner")]
-        public async Task<IActionResult> UpdateProperty(int propertyId, [FromBody] PropertyDetailsDTO updatedPropertyDetails)
+        public async Task<IActionResult> UpdateProperty(int propertyId, [FromForm] PropertyDetailsDTO updatedPropertyDetails)
         {
 
             if (propertyId <= 0)

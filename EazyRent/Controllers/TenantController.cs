@@ -10,6 +10,7 @@ namespace EazyRent.Controllers
     //[Authorize(Roles = "Tenant")]
     [Route("api/[controller]")]
     [ApiController]
+    [Produces("application/json")]
     public class TenantController : ControllerBase
     {
         private readonly IProperty _property;

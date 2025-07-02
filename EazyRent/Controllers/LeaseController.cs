@@ -13,6 +13,7 @@ namespace EazyRent.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Produces("application/json")]
     public class LeaseController : ControllerBase
     {
         private readonly ILease _leaseRepository;
@@ -160,7 +161,7 @@ namespace EazyRent.Controllers
 
             if (string.IsNullOrEmpty(tenantIdString) || !int.TryParse(tenantIdString, out int tenantId))
             {
-                return Unauthorized("Tenant ID claim not found or is invalid in token.");
+                return Unauthorized(new { Message = "Tenant ID claim not found or is invalid in token." });
             }
 
             var leases = await _leaseRepository.GetLeasesByTenantIdAsync(tenantId);
@@ -184,7 +185,7 @@ namespace EazyRent.Controllers
             if (string.IsNullOrEmpty(ownerIdString) || !int.TryParse(ownerIdString, out int ownerId))
             {
                 
-                return Unauthorized("Owner ID claim not found or is invalid in token.");
+                return Unauthorized(new { Message = "Owner ID claim not found or is invalid in token." });
             }
 
           
