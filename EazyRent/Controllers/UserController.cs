@@ -11,6 +11,7 @@ namespace EazyRent.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Produces("application/json")]
     public class UserController : ControllerBase
     {
         private readonly RentalDBContext _dbContext;

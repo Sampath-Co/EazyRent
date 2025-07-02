@@ -10,6 +10,7 @@ namespace EazyRent.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Produces("application/json")]
     public class OwnerController : ControllerBase
     {
         private readonly ILease _leaseRepository;
@@ -33,27 +34,27 @@ namespace EazyRent.Controllers
             var ownerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(ownerIdString) || !int.TryParse(ownerIdString, out int ownerId))
             {
-            return Unauthorized(new { message = "Owner ID claim not found or is invalid in token." });
+                return Unauthorized(new { Message = "Owner ID claim not found or is invalid in token." });
             }
 
             try
             {
-            var lease = await _leaseRepository.GetLeaseByIdAsync(approveRejectLeaseDto.LeaseId);
-            if (lease == null || lease.Property?.OwnerId != ownerId)
-            {
-                return NotFound(new { message = "Lease request not found or you are not the owner." });
-            }
+                var lease = await _leaseRepository.GetLeaseByIdAsync(approveRejectLeaseDto.LeaseId);
+                if (lease == null || lease.Property?.OwnerId != ownerId)
+                {
+                    return NotFound(new { Message = "Lease request not found or you are not the owner." });
+                }
 
             lease.Status = approveRejectLeaseDto.Status;
 
             var result = await _leaseRepository.UpdateLeaseAsync(lease);
 
-            if (!result)
-            {
-                return BadRequest(new { message = "Could not update lease request. Please try again or contact support." });
-            }
+                if (!result)
+                {
+                    return BadRequest(new { Message = "Could not update lease request. Please try again or contact support." });
+                }
 
-            return Ok(new { message = $"Lease request has been {approveRejectLeaseDto.Status.ToLower()}." });
+                return Ok(new { Message = $"Lease request has been {approveRejectLeaseDto.Status.ToLower()}." });
             }
             catch (Exception ex)
             {

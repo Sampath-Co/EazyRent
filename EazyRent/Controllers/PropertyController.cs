@@ -8,6 +8,7 @@ namespace EazyRent.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Produces("application/json")]
     public class PropertyController : ControllerBase
     {
         private readonly IProperty _property;
