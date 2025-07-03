@@ -10,6 +10,8 @@
 
         public IFormFile? PropertyImage { get; set; }
 
+        public string? PropertyImageBase64 { get; set; }
+
         public string? PropertyDescription { get; set; }
     }
 }
