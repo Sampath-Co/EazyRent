@@ -20,7 +20,12 @@ namespace EazyRent.Mappings
 
             CreateMap<RegistrationDTO, User>()
             .ForMember(dest => dest.PasswordHash, opt => opt.MapFrom(src => BCrypt.Net.BCrypt.HashPassword(src.Password)));
-            CreateMap<Payment, PaymentDTO>().ReverseMap();
+
+            // Add TenantName mapping for Payment -> PaymentDTO
+            CreateMap<Payment, PaymentDTO>()
+                .ForMember(dest => dest.TenantName, opt => opt.MapFrom(src => src.Tenant != null ? src.Tenant.FullName : null))
+                .ReverseMap();
+
             CreateMap<MaintenanceRequest, MaintenanceRequestDto>()
                 .ForMember(dest => dest.TenantFullName, opt => opt.MapFrom(src => src.Tenant != null ? src.Tenant.FullName : null))
                 .ReverseMap();
@@ -55,8 +60,4 @@ namespace EazyRent.Mappings
             return ms.ToArray();
         }
     }
-
-
-
-
 }

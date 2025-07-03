@@ -16,4 +16,7 @@ public partial class Payment
     public string? Status { get; set; }
 
     public virtual Lease? Lease { get; set; }
+    
+    public virtual User? Tenant { get; set; }
+
 }
