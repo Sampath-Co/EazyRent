@@ -23,18 +23,38 @@ namespace EazyRent.Models.Repositories
         public async Task<IEnumerable<PaymentDTO>> GetPaymentsByLeaseIdAsync(int leaseId)
         {
             var payments = await _dbContext.Payments
+                .Include(p => p.Lease)
+                .ThenInclude(l => l.Tenant)
                 .Where(p => p.LeaseId == leaseId)
                 .ToListAsync();
 
-            return _mapper.Map<IEnumerable<PaymentDTO>>(payments);
+            return payments.Select(p => new PaymentDTO
+            {
+                LeaseId = p.LeaseId,
+                Amount = p.Amount,
+                PaymentDate = p.PaymentDate,
+                Status = p.Status,
+                TenantName = p.Lease?.Tenant?.FullName
+            });
         }
 
         public async Task<PaymentDTO?> GetPaymentByIdAsync(int paymentId)
         {
             var payment = await _dbContext.Payments
+                .Include(p => p.Lease)
+                .ThenInclude(l => l.Tenant)
                 .FirstOrDefaultAsync(p => p.PaymentId == paymentId);
 
-            return _mapper.Map<PaymentDTO>(payment);
+            if (payment == null) return null;
+
+            return new PaymentDTO
+            {
+                LeaseId = payment.LeaseId,
+                Amount = payment.Amount,
+                PaymentDate = payment.PaymentDate,
+                Status = payment.Status,
+                TenantName = payment.Lease?.Tenant?.FullName
+            };
         }
 
         public async Task<bool> AddPaymentAsync(PaymentDTO paymentDto)

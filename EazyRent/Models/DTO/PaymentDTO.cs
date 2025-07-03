@@ -6,5 +6,6 @@ namespace EazyRent.Models.DTO
         public decimal? Amount { get; set; }
         public DateOnly? PaymentDate { get; set; }
         public string? Status { get; set; }
+        public string? TenantName { get; set; }
     }
 }
