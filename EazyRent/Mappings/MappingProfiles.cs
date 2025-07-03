@@ -23,7 +23,7 @@ namespace EazyRent.Mappings
 
             // Add TenantName mapping for Payment -> PaymentDTO
             CreateMap<Payment, PaymentDTO>()
-                .ForMember(dest => dest.TenantName, opt => opt.MapFrom(src => src.Tenant != null ? src.Tenant.FullName : null))
+                .ForMember(dest => dest.TenantName, opt => opt.MapFrom(src => src.Lease != null && src.Lease.Tenant != null ? src.Lease.Tenant.FullName : null))
                 .ReverseMap();
 
             CreateMap<MaintenanceRequest, MaintenanceRequestDto>()
