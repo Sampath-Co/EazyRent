@@ -196,6 +196,7 @@ namespace EazyRent.Models.Repositories
         }
 
 
+
         // Removed explicit interface implementation for GetPropertiesForOwnerAsync because it does not exist in IProperty interface.
 
 

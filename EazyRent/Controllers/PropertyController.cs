@@ -134,20 +134,26 @@ namespace EazyRent.Controllers
         [HttpGet("/Tenant/GetPropertyById/{propertyId}")]
         public async Task<IActionResult> GetPropertyById(int propertyId)
         {
-
             if (propertyId <= 0)
             {
-                return BadRequest("Invalid property ID.");
+            return BadRequest(new { Message = "Invalid property ID." });
             }
 
+            try
+            {
             var property = await _property.GetPropertyByIdAsync(propertyId);
 
             if (property == null)
             {
-                return NotFound($"Property with ID {propertyId} not found.");
+                return NotFound(new { Message = $"Property with ID {propertyId} not found." });
             }
 
             return Ok(property);
+            }
+            catch (Exception ex)
+            {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An error occurred while fetching the property.", Details = ex.Message });
+            }
         }
 
         [Authorize(Roles = "Owner")]
@@ -188,51 +194,18 @@ namespace EazyRent.Controllers
 
 
 
-
         [HttpPut("/Owner/UpdateProperty/{propertyId}")]
         [Authorize(Roles = "Owner")]
         public async Task<IActionResult> UpdateProperty(int propertyId, [FromForm] PropertyDetailsDTO updatedPropertyDetails)
         {
-
             if (propertyId <= 0)
             {
-                return BadRequest("Invalid property ID.");
+                return BadRequest(new { message = "Invalid property ID." });
             }
 
             if (updatedPropertyDetails == null)
             {
-                return BadRequest("Property details cannot be null.");
-            }
-            var ownerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(ownerIdString) || !int.TryParse(ownerIdString, out int ownerId))
-            {
-                return Unauthorized("Owner ID claim not found or is invalid.");
-            }
-            var success = await _property.UpdatePropertyAsync(propertyId, ownerId, updatedPropertyDetails);
-            if (!success)
-            {
-                var propertyExists = await _property.GetPropertyByIdAsync(propertyId) != null;
-                if (!propertyExists)
-                {
-                    return NotFound($"Property with ID {propertyId} not found.");
-                }
-                else
-                {
-                    return Forbid("You are not authorized to update this property.");
-                }
-            }
-            return Ok("Property updated successfully.");
-        }
-
-
-
-        [HttpDelete("/Owner/DeleteProperty/{propertyId}")]
-        [Authorize(Roles = "Owner")]
-        public async Task<IActionResult> DeleteProperty(int propertyId)
-        {
-            if (propertyId <= 0)
-            {
-                return BadRequest(new { message = "Invalid property ID." });
+                return BadRequest(new { message = "Property details cannot be null." });
             }
 
             var ownerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -241,15 +214,9 @@ namespace EazyRent.Controllers
                 return Unauthorized(new { message = "Owner ID claim not found or is invalid." });
             }
 
-            var (success, hasLeases) = await _property.DeletePropertyAsync(propertyId, ownerId);
-
+            var success = await _property.UpdatePropertyAsync(propertyId, ownerId, updatedPropertyDetails);
             if (!success)
             {
-                if (hasLeases)
-                {
-                    return StatusCode(StatusCodes.Status409Conflict, new { message = "Cannot delete property. There are active leases for this property. Please delete all leases first." });
-                }
-
                 var propertyExists = await _property.GetPropertyByIdAsync(propertyId) != null;
                 if (!propertyExists)
                 {
@@ -257,11 +224,50 @@ namespace EazyRent.Controllers
                 }
                 else
                 {
-                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "You are not authorized to delete this property." });
+                    return Forbid("You are not authorized to update this property.");
                 }
             }
 
-            return Ok(new { message = "Property deleted successfully." });
+            return Ok(new { message = "Property updated successfully." });
+        }
+
+
+        [HttpDelete("/Owner/DeleteProperty/{propertyId}")]
+        [Authorize(Roles = "Owner")]
+        public async Task<IActionResult> DeleteProperty(int propertyId)
+        {
+            if (propertyId <= 0)
+            {
+                return BadRequest(new { Message = "Invalid property ID." });
+            }
+
+            var ownerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(ownerIdString) || !int.TryParse(ownerIdString, out int ownerId))
+            {
+                return Unauthorized(new { Message = "Owner ID claim not found or is invalid." });
+            }
+
+            var (success, hasLeases) = await _property.DeletePropertyAsync(propertyId, ownerId);
+
+            if (!success)
+            {
+                if (hasLeases)
+                {
+                    return Conflict(new { Message = "Cannot delete property. There are active leases for this property. Please delete all leases first." });
+                }
+
+                var propertyExists = await _property.GetPropertyByIdAsync(propertyId) != null;
+                if (!propertyExists)
+                {
+                    return NotFound(new { Message = $"Property with ID {propertyId} not found." });
+                }
+                else
+                {
+                    return Forbid("You are not authorized to delete this property.");
+                }
+            }
+
+            return Ok(new { Message = "Property deleted successfully." });
         }
     }
 

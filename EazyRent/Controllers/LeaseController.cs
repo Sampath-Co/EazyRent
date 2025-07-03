@@ -17,18 +17,15 @@ namespace EazyRent.Controllers
     public class LeaseController : ControllerBase
     {
         private readonly ILease _leaseRepository;
+        private readonly IPayment _paymentRepository;
 
-        public IPayment _paymentRepository { get; }
-
-        
-
-        public LeaseController(ILease leaseRepository ,IPayment paymentRepository) 
+        public LeaseController(ILease leaseRepository, IPayment paymentRepository)
         {
             _leaseRepository = leaseRepository;
             _paymentRepository = paymentRepository;
-           
         }
 
+        // Tenant: Request a new lease
         [Authorize(Roles = "Tenant")]
         [HttpPost("Tenant/RequestLease")]
         public async Task<IActionResult> RequestLease([FromForm] CreateLeaseDTO createLeaseDto)
@@ -38,123 +35,36 @@ namespace EazyRent.Controllers
                 return BadRequest(new { Errors = ModelState });
             }
 
-            try
+            var tenantIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(tenantIdString) || !int.TryParse(tenantIdString, out int tenantId))
             {
-                var tenantIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(tenantIdString) || !int.TryParse(tenantIdString, out int tenantId))
-                {
-                    throw new UnauthorizedAccessException("Tenant ID claim not found or is invalid in token.");
-                }
-
-                // --- Digital Signature File Save Logic (optional, for debugging or audit) ---
-                if (createLeaseDto.DigitalSignature != null)
-                {
-                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "signatures");
-                    if (!Directory.Exists(uploadsFolder))
-                    {
-                        Directory.CreateDirectory(uploadsFolder);
-                    }
-                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + createLeaseDto.DigitalSignature.FileName;
-                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await createLeaseDto.DigitalSignature.CopyToAsync(fileStream);
-                    }
-                }
-                else
-                {
-                    return BadRequest(new { Message = "No digital signature uploaded." });
-                }
-                // --------------------------------------------------------------------------
-
-                var newLease = await _leaseRepository.CreateLeaseRequestAsync(tenantId, createLeaseDto);
-
-                if (newLease == null)
-                {
-                    throw new Exception("Could not create lease request.");
-                }
-
-                var payment = new Payment
-                {
-                    LeaseId = newLease.LeaseId,
-                    Amount = createLeaseDto.ProposedRentAmount,
-                    Status = "Pending"
-                };
-
-                await _paymentRepository.AddPaymentAsync(payment);
-
-                return Ok(new { Message = "Lease and initial payment created." });
+                return Unauthorized(new { Message = "Tenant ID claim not found or is invalid." });
             }
-            catch (UnauthorizedAccessException ex)
+
+            var newLease = await _leaseRepository.CreateLeaseRequestAsync(tenantId, createLeaseDto);
+
+            if (newLease == null)
             {
-                return Unauthorized(new { Message = ex.Message });
+                return BadRequest(new { Message = "Could not create lease request. Please check property details or contact support." });
             }
-            catch (Exception ex)
+
+            // Create an initial payment for the lease
+            var payment = new Payment
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An error occurred.", Details = ex.Message });
-            }
+                LeaseId = newLease.LeaseId, 
+                Amount = createLeaseDto.ProposedRentAmount,
+                PaymentDate = DateOnly.FromDateTime(DateTime.Now), // Set the current date as PaymentDate
+                Status = "Pending"
+            };
+
+            await _paymentRepository.AddPaymentAsync(payment);
+
+            return Ok(new { Message = "Lease request created successfully.", LeaseId = newLease.LeaseId });
         }
 
-
-        //[Authorize(Roles = "Tenant")]
-        //[HttpPost("/Tenant/RequestLease")]
-        //public async Task<IActionResult> RequestLease([FromBody] CreateLeaseDTO createLeaseDto)
-        //{
-        //    if (!ModelState.IsValid)
-        //    {
-        //        return BadRequest(ModelState);
-        //    }
-
-        //    try
-        //    {
-        //        var tenantIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        //        if (string.IsNullOrEmpty(tenantIdString) || !int.TryParse(tenantIdString, out int tenantId))
-        //        {
-        //            throw new UnauthorizedAccessException("Tenant ID claim not found or is invalid in token.");
-        //        }
-
-        //        var newLease = await _leaseRepository.CreateLeaseRequestAsync(tenantId, createLeaseDto);
-
-        //        if (newLease == null)
-        //        {
-        //            throw new Exception("Could not create lease request. Please check property details or contact support.");
-        //        }
-
-        //        // 201 Created is appropriate for successful resource creation
-        //        return Ok("Lease Created");
-        //    }
-        //    catch (UnauthorizedAccessException ex)
-        //    {
-        //        return Unauthorized(new { Message = ex.Message });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An error occurred while creating the lease.", Details = ex.Message });
-        //    }
-        //}
-        //[HttpGet("my-leases/tenant")]
-        //[Authorize(Roles = "Tenant")] // Only Tenants can access this endpoint
-        //public async Task<IActionResult> GetMyLeasesAsTenant()
-        //{
-        //    var tenantIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        //    if (string.IsNullOrEmpty(tenantIdString) || !int.TryParse(tenantIdString, out int tenantId))
-        //    {
-        //        return Unauthorized("Tenant ID claim not found or is invalid in token.");
-        //    }
-
-        //    var leases = await _leaseRepository.GetLeaseByIdAsync(tenantId); 
-
-        //    if (leases == null || !leases.Any())
-        //    {
-        //        return NoContent(); // 204 No Content if no leases found for this tenant
-        //    }
-
-        //    return Ok(leases); // Returns a list of LeaseDetailsDTO
-        //}
-
-        [HttpGet("/Tenant/Leases")]
-        [Authorize(Roles = "Tenant")] 
+        // Tenant: Get all leases for the tenant
+        [Authorize(Roles = "Tenant")]
+        [HttpGet("Tenant/Leases")]
         public async Task<IActionResult> GetMyLeasesAsTenant()
         {
             var tenantIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -166,20 +76,19 @@ namespace EazyRent.Controllers
 
             var leases = await _leaseRepository.GetLeasesByTenantIdAsync(tenantId);
 
-            if (!leases.Any()) 
+            if (!leases.Any())
             {
-                return NoContent(); 
+                return NoContent();
             }
 
-            return Ok(leases); // Now returns IEnumerable<GetLeaseDetailsDTO>
+            return Ok(leases); // Returns IEnumerable<GetLeaseDetailsDTO>
         }
 
-       
-        [HttpGet("/Owner/Leases")]
-        [Authorize(Roles = "Owner")] 
+        // Owner: Get all leases for the owner
+        [Authorize(Roles = "Owner")]
+        [HttpGet("Owner/Leases")]
         public async Task<IActionResult> GetMyLeasesAsOwner()
         {
-           
             var ownerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (string.IsNullOrEmpty(ownerIdString) || !int.TryParse(ownerIdString, out int ownerId))
@@ -188,17 +97,51 @@ namespace EazyRent.Controllers
                 return Unauthorized(new { Message = "Owner ID claim not found or is invalid in token." });
             }
 
-          
             var leases = await _leaseRepository.GetLeasesByOwnerIdAsync(ownerId);
 
             if (!leases.Any())
             {
-                return NoContent(); 
+                return NoContent();
             }
 
-            return Ok(leases); 
+            return Ok(leases); // Returns IEnumerable<LeaseDetailsDTO>
         }
 
+        // Owner: Delete a lease
+        [Authorize(Roles = "Owner")]
+        [HttpDelete("Owner/DeleteLease/{leaseId:int}")]
+        public async Task<IActionResult> DeleteLease(int leaseId)
+        {
+            if (leaseId <= 0)
+            {
+                return BadRequest(new { Message = "Invalid lease ID." });
+            }
 
+            var ownerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(ownerIdString) || !int.TryParse(ownerIdString, out int ownerId))
+            {
+                return Unauthorized(new { Message = "Owner ID claim not found or is invalid." });
+            }
+
+            var payments = await _paymentRepository.GetPaymentsByLeaseIdAsync(leaseId);
+            if (payments != null && payments.Any())
+            {
+                bool allPaid = payments.All(p => p.Status.Equals("Paid", StringComparison.OrdinalIgnoreCase));
+                if (!allPaid)
+                {
+                    return BadRequest(new { Message = "Cannot delete lease. All payments must be completed first." });
+                }
+
+                await _paymentRepository.DeletePaymentsByLeaseIdAsync(leaseId);
+            }
+
+            var success = await _leaseRepository.DeleteLeaseByOwnerAsync(leaseId, ownerId);
+            if (!success)
+            {
+                return NotFound(new { Message = "Lease not found or you are not authorized to delete this lease." });
+            }
+
+            return Ok(new { Message = "Lease and associated payments deleted successfully." });
+        }
     }
 }

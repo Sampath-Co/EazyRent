@@ -28,7 +28,7 @@ namespace EazyRent.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+            return BadRequest(new { message = "Invalid input data.", errors = ModelState });
             }
 
             var ownerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -45,9 +45,9 @@ namespace EazyRent.Controllers
                     return NotFound(new { Message = "Lease request not found or you are not the owner." });
                 }
 
-                lease.Status = approveRejectLeaseDto.Status;
+            lease.Status = approveRejectLeaseDto.Status;
 
-                var result = await _leaseRepository.UpdateLeaseAsync(lease);
+            var result = await _leaseRepository.UpdateLeaseAsync(lease);
 
                 if (!result)
                 {
@@ -58,7 +58,7 @@ namespace EazyRent.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An error occurred while processing the lease request.", Details = ex.Message });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An error occurred while processing the lease request.", details = ex.Message });
             }
         }
 
