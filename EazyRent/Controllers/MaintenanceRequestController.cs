@@ -71,7 +71,7 @@ namespace EazyRent.Controllers
 
         [Authorize(Roles = "Tenant")]
         [HttpPost("/Tenant/CreateMaintenanceRequest/")]
-        public async Task<IActionResult> AddRequest([FromBody] MaintenanceRequestDto requestDto)
+        public async Task<IActionResult> AddRequest([FromBody] CreateMaintenceRequestDto requestDto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 

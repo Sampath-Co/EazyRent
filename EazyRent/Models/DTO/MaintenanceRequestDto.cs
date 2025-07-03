@@ -4,7 +4,9 @@
     {
         public int RequestId { get; set; }
         public int? PropertyId { get; set; }
-        public string? TenantFullName { get; set; } // <-- Add this
+
+        public int? TenantId { get; set; }
+        public string? TenantFullName { get; set; } // Added TenantName
 
         public string? IssueDescription { get; set; }
         public string? Status { get; set; }

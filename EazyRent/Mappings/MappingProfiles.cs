@@ -36,7 +36,10 @@ namespace EazyRent.Mappings
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<Lease, GetLeaseDetailsDTO>()
-                .ForMember(dest => dest.TenantName, opt => opt.MapFrom(src => src.Tenant.FullName));
+                .ForMember(dest => dest.TenantName, opt => opt.MapFrom(src => src.Tenant != null ? src.Tenant.FullName : null));
+
+            CreateMap<CreateMaintenceRequestDto, MaintenanceRequest>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<CreateLeaseDTO, Lease>()
                 .ForMember(dest => dest.DigitalSignature, opt => opt.MapFrom(src =>
