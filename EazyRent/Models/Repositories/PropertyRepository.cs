@@ -104,7 +104,38 @@ namespace EazyRent.Models.Repositories
                 return false;
             }
 
-            _mapper.Map(updatedPropertyDetails, existingProperty);
+            // Update fields except image
+            existingProperty.Address = updatedPropertyDetails.Address;
+            existingProperty.RentAmount = updatedPropertyDetails.RentAmount;
+            existingProperty.AvailabilityStatus = updatedPropertyDetails.AvailabilityStatus;
+            existingProperty.PropertyDescription = updatedPropertyDetails.PropertyDescription;
+
+            // Image handling logic
+            if (updatedPropertyDetails.PropertyImage != null)
+            {
+                using (var ms = new MemoryStream())
+                {
+                    updatedPropertyDetails.PropertyImage.CopyTo(ms);
+                    existingProperty.PropertyImage = ms.ToArray();
+                }
+            }
+            else if (!string.IsNullOrEmpty(updatedPropertyDetails.PropertyImageBase64))
+            {
+                try
+                {
+                    var base64 = updatedPropertyDetails.PropertyImageBase64;
+                    var commaIndex = base64.IndexOf(",");
+                    if (commaIndex >= 0)
+                        base64 = base64.Substring(commaIndex + 1); // Remove data:image/png;base64, etc.
+                    existingProperty.PropertyImage = Convert.FromBase64String(base64);
+                }
+                catch
+                {
+                    // Ignore invalid base64, keep existing image
+                }
+            }
+            // else: do not overwrite PropertyImage (keep existing)
+
             await _dbContext.SaveChangesAsync();
             return true;
         }
