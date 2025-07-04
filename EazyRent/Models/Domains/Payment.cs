@@ -17,6 +17,5 @@ public partial class Payment
 
     public virtual Lease? Lease { get; set; }
     
-    public virtual User? Tenant { get; set; }
 
 }
