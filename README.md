@@ -216,7 +216,13 @@ public class RegistrationDTO {
 }
 ```
 
-<!-- Insert Login/Registration flow image here -->
+**Screenshots:**
+
+![Login Page](img/Login.png)
+_Login Page_
+
+![Registration Page](img/Registration.png)
+_Registration Page_
 
 ---
 
@@ -264,7 +270,10 @@ public async Task<IActionResult> DeleteLease(int leaseId) { ... }
 - **ApproveRejectLease:** Owner approves/rejects a lease, checks ownership, updates status.
 - **DeleteLease:** Owner deletes a lease if all related payments are marked as "Paid".
 
-<!-- Insert OwnerDashboard image here -->
+**Screenshot:**
+
+![Owner Dashboard](img/OwnerDashboard.png)
+_Owner Dashboard_
 
 ---
 
@@ -301,7 +310,10 @@ public async Task<IActionResult> GetAllProperties([FromQuery] string? filterOn, 
 
 - **GetAllProperties:** Returns all available properties, supports filtering by criteria.
 
-<!-- Insert TenantDashboard image here -->
+**Screenshot:**
+
+![Tenant Dashboard](img/TenantDashboard.png)
+_Tenant Dashboard_
 
 ---
 
@@ -357,7 +369,13 @@ public async Task<IActionResult> DeleteProperty(int propertyId) { ... }
 - **UpdateProperty:** Owner updates property details.
 - **DeleteProperty:** Owner deletes a property if allowed.
 
-<!-- Insert Property Management image here -->
+**Screenshots:**
+
+![Property Page (Owner)](img/PropertyPageOwner.png)
+_Property Management (Owner)_
+
+![Property Page (Tenant)](img/PropertyPageTenant.png)
+_Property Management (Tenant)_
 
 ---
 
@@ -405,7 +423,16 @@ public async Task<IActionResult> DeleteLease(int leaseId) { ... }
 - **GetMyLeasesAsTenant/Owner:** Returns leases for the current user.
 - **DeleteLease:** Owner deletes a lease if all payments are completed.
 
-<!-- Insert Lease Management image here -->
+**Screenshots:**
+
+![Lease Page (Owner)](img/LeasePageOwner.png)
+_Lease Management (Owner)_
+
+![Lease Page (Tenant)](img/LeasePageTenant.png)
+_Lease Management (Tenant)_
+
+![Lease Request (Tenant)](img/LeaseRequestTenant.png)
+_Lease Request (Tenant)_
 
 ---
 
@@ -457,7 +484,13 @@ public async Task<IActionResult> DeleteMaintenanceRequest([FromRoute] int reques
 - **UpdateMaintenanceStatus:** Owner updates the status of a request.
 - **DeleteMaintenanceRequest:** Owner deletes a request if its status is "terminated".
 
-<!-- Insert Maintenance Requests image here -->
+**Screenshots:**
+
+![Maintenance Page (Owner)](img/MaintenancePageOwner.png)
+_Maintenance Requests (Owner)_
+
+![Maintenance Page (Tenant)](img/MaintenancePageTenant.png)
+_Maintenance Requests (Tenant)_
 
 ---
 
@@ -503,7 +536,13 @@ public async Task<IActionResult> CreatePayment([FromBody] PaymentDTO paymentDto)
 - **GetPaymentsByLeaseId:** Retrieves payments for a specific lease.
 - **CreatePayment:** Tenant creates a new payment.
 
-<!-- Insert Payment image here -->
+**Screenshots:**
+
+![Payment Page (Owner)](img/PaymentPageOwner.png)
+_Payment Dashboard (Owner)_
+
+![Payment Page (Tenant)](img/PaymentPageTenant.png)
+_Payment Dashboard (Tenant)_
 
 ---
 
@@ -517,6 +556,11 @@ public async Task<IActionResult> CreatePayment([FromBody] PaymentDTO paymentDto)
 **Backend Logic:**
 
 - JWT authentication and role-based authorization handled in backend (middleware, not a specific controller).
+
+**Screenshots:**
+
+![Home Page](img/Home.png)
+_Home Page_
 
 ---
 
