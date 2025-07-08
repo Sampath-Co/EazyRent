@@ -173,6 +173,49 @@ This section details how each major frontend component interacts with the backen
 - **Login:** Validates credentials, issues JWT, returns user roles.
 - **Register:** Creates new user (Owner or Tenant), hashes password, stores user.
 
+**Key Controller Code:**
+
+```csharp
+// UserController.cs
+[HttpPost("register")]
+public async Task<IActionResult> RegisterOwner(RegistrationDTO dto) { ... }
+
+[HttpPost("login")]
+public IActionResult Login(LoginDTO dto) { ... }
+```
+
+- **RegisterOwner:** Maps registration DTO to User, saves to DB, returns a message based on role.
+- **Login:** Validates credentials, issues JWT if successful.
+
+**Key DTOs:**
+
+```csharp
+// LoginDTO.cs
+public class LoginDTO {
+    [Required]
+    [DataType(DataType.EmailAddress)]
+    public String Email { get; set; }
+    [Required]
+    [DataType(DataType.Password)]
+    public String Password { get; set; }
+}
+
+// RegistrationDTO.cs
+public class RegistrationDTO {
+    [Required]
+    public string FullName { get; set; }
+    [Required]
+    public string Email { get; set; }
+    [Required]
+    [DataType(DataType.Password)]
+    public string Password { get; set; }
+    [Required]
+    public string PhoneNumber { get; set; }
+    [Required]
+    public string Role { get; set; }
+}
+```
+
 <!-- Insert Login/Registration flow image here -->
 
 ---
@@ -205,6 +248,22 @@ This section details how each major frontend component interacts with the backen
 - `PUT /Maintenance/{id}/Status` — Update maintenance status
 - `GET /Payment/Owner/{ownerId}` — Payment history
 
+**Key Controller Code:**
+
+```csharp
+// OwnerController.cs
+[Authorize(Roles = "Owner")]
+[HttpPost("/Owner/ApproveRejectLease")]
+public async Task<IActionResult> ApproveRejectLease([FromBody] ApproveRejectLeaseDto dto) { ... }
+
+[Authorize(Roles = "Owner")]
+[HttpDelete("/Owner/DeleteLease/{leaseId}")]
+public async Task<IActionResult> DeleteLease(int leaseId) { ... }
+```
+
+- **ApproveRejectLease:** Owner approves/rejects a lease, checks ownership, updates status.
+- **DeleteLease:** Owner deletes a lease if all related payments are marked as "Paid".
+
 <!-- Insert OwnerDashboard image here -->
 
 ---
@@ -232,6 +291,16 @@ This section details how each major frontend component interacts with the backen
 - `POST /Maintenance` — Submit maintenance request
 - `GET /Payment/Tenant/{tenantId}` — Payment history
 
+**Key Controller Code:**
+
+```csharp
+// TenantController.cs
+[HttpGet("/Tenant/Properties")]
+public async Task<IActionResult> GetAllProperties([FromQuery] string? filterOn, [FromQuery] string? filterQuery, [FromQuery] decimal? filterRent) { ... }
+```
+
+- **GetAllProperties:** Returns all available properties, supports filtering by criteria.
+
 <!-- Insert TenantDashboard image here -->
 
 ---
@@ -257,6 +326,37 @@ This section details how each major frontend component interacts with the backen
 - `PUT /Property/{id}` — Update property
 - `DELETE /Property/{id}` — Delete property
 
+**Key Controller Code:**
+
+```csharp
+// PropertyController.cs
+[HttpGet("/Owner/Properties")]
+[Authorize(Roles = "Owner")]
+public async Task<IActionResult> GetMyPropertiesAsOwner() { ... }
+
+[Authorize(Roles = "Owner")]
+[HttpPost("/Owner/AddProperty")]
+public async Task<IActionResult> AddProperty([FromForm] PropertyDetailsDTO dto) { ... }
+
+[Authorize(Roles = "Tenant")]
+[HttpGet("/Tenant/GetPropertyById/{propertyId}")]
+public async Task<IActionResult> GetPropertyById(int propertyId) { ... }
+
+[HttpPut("/Owner/UpdateProperty/{propertyId}")]
+[Authorize(Roles = "Owner")]
+public async Task<IActionResult> UpdateProperty(int propertyId, [FromForm] PropertyDetailsDTO updatedPropertyDetails) { ... }
+
+[HttpDelete("/Owner/DeleteProperty/{propertyId}")]
+[Authorize(Roles = "Owner")]
+public async Task<IActionResult> DeleteProperty(int propertyId) { ... }
+```
+
+- **GetMyPropertiesAsOwner:** Owner retrieves their properties.
+- **AddProperty:** Owner adds a property with image upload.
+- **GetPropertyById:** Tenant/Owner retrieves property details.
+- **UpdateProperty:** Owner updates property details.
+- **DeleteProperty:** Owner deletes a property if allowed.
+
 <!-- Insert Property Management image here -->
 
 ---
@@ -280,6 +380,31 @@ This section details how each major frontend component interacts with the backen
 - `POST /Lease/Reject` — Owner: reject lease
 - `POST /api/Lease/Tenant/RequestLease` — Tenant: request lease
 
+**Key Controller Code:**
+
+```csharp
+// LeaseController.cs
+[Authorize(Roles = "Tenant")]
+[HttpPost("Tenant/RequestLease")]
+public async Task<IActionResult> RequestLease([FromForm] CreateLeaseDTO dto) { ... }
+
+[Authorize(Roles = "Tenant")]
+[HttpGet("Tenant/Leases")]
+public async Task<IActionResult> GetMyLeasesAsTenant() { ... }
+
+[Authorize(Roles = "Owner")]
+[HttpGet("Owner/Leases")]
+public async Task<IActionResult> GetMyLeasesAsOwner() { ... }
+
+[Authorize(Roles = "Owner")]
+[HttpDelete("Owner/DeleteLease/{leaseId:int}")]
+public async Task<IActionResult> DeleteLease(int leaseId) { ... }
+```
+
+- **RequestLease:** Tenant requests a lease, creates an initial payment.
+- **GetMyLeasesAsTenant/Owner:** Returns leases for the current user.
+- **DeleteLease:** Owner deletes a lease if all payments are completed.
+
 <!-- Insert Lease Management image here -->
 
 ---
@@ -302,6 +427,36 @@ This section details how each major frontend component interacts with the backen
 - `POST /Maintenance` — Tenant: submit request
 - `PUT /Maintenance/{id}/Status` — Owner: update status
 
+**Key Controller Code:**
+
+```csharp
+// MaintenanceRequestController.cs
+[Authorize(Roles = "Owner")]
+[HttpGet("/Owner/GetAllMaintenance/")]
+public async Task<IActionResult> GetAllRequests() { ... }
+
+[Authorize(Roles = "Tenant")]
+[HttpGet("/Tenant/GetAllMaintenance/")]
+public async Task<IActionResult> GetAllRequestsByTenant() { ... }
+
+[Authorize(Roles = "Tenant")]
+[HttpPost("/Tenant/CreateMaintenanceRequest/")]
+public async Task<IActionResult> AddRequest([FromBody] CreateMaintenceRequestDto dto) { ... }
+
+[Authorize(Roles = "Owner")]
+[HttpPut("Owner/Update/{requestId:int}")]
+public async Task<IActionResult> UpdateMaintenanceStatus([FromRoute] int requestId, [FromBody] string status) { ... }
+
+[Authorize(Roles = "Owner")]
+[HttpDelete("/Owner/DeleteMaintenance/{requestId:int}")]
+public async Task<IActionResult> DeleteMaintenanceRequest([FromRoute] int requestId) { ... }
+```
+
+- **GetAllRequests/GetAllRequestsByTenant:** Owner/Tenant retrieves maintenance requests.
+- **AddRequest:** Tenant submits a maintenance request.
+- **UpdateMaintenanceStatus:** Owner updates the status of a request.
+- **DeleteMaintenanceRequest:** Owner deletes a request if its status is "terminated".
+
 <!-- Insert Maintenance Requests image here -->
 
 ---
@@ -323,6 +478,31 @@ This section details how each major frontend component interacts with the backen
 - `GET /Payment/Tenant/{tenantId}` — Tenant: payment history
 - `POST /Payment` — Tenant: make payment
 
+**Key Controller Code:**
+
+```csharp
+// PaymentController.cs
+[HttpGet("/Payments")]
+[Authorize(Roles = "Tenant,Owner")]
+public async Task<IActionResult> GetPayments() { ... }
+
+[HttpPut("/Tenant/UpdatePaymentStatus/{leaseId}")]
+[Authorize(Roles = "Tenant")]
+public async Task<IActionResult> UpdatePaymentStatus(int leaseId) { ... }
+
+[HttpGet("/Lease/{leaseId}/Payments")]
+public async Task<IActionResult> GetPaymentsByLeaseId(int leaseId) { ... }
+
+[HttpPost("Create")]
+[Authorize(Roles = "Tenant")]
+public async Task<IActionResult> CreatePayment([FromBody] PaymentDTO paymentDto) { ... }
+```
+
+- **GetPayments:** Owner/Tenant retrieves their payments.
+- **UpdatePaymentStatus:** Tenant marks a payment as paid.
+- **GetPaymentsByLeaseId:** Retrieves payments for a specific lease.
+- **CreatePayment:** Tenant creates a new payment.
+
 <!-- Insert Payment image here -->
 
 ---
@@ -337,8 +517,6 @@ This section details how each major frontend component interacts with the backen
 **Backend Logic:**
 
 - JWT authentication and role-based authorization handled in backend (middleware, not a specific controller).
-
-<!-- Insert Navigation/Access Control image here -->
 
 ---
 
