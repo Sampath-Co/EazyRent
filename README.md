@@ -216,10 +216,187 @@ public class RegistrationDTO {
 }
 ```
 
+<!-- Insert Login/Registration flow image here -->
+
+---
+
+### Frontend Code Examples: Login & Registration
+
+#### Login Component (`/src/app/components/user/login/`)
+
+**login.ts**
+```typescript
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AuthService } from '../../shared/services/auth.service';
+import { Router } from '@angular/router';
+
+@Component({
+  selector: 'app-login',
+  templateUrl: './login.html',
+  styleUrls: ['./login.css']
+})
+export class LoginComponent {
+  loginForm: FormGroup;
+  error: string = '';
+  loading = false;
+
+  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
+    this.loginForm = this.fb.group({
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', Validators.required]
+    });
+  }
+
+  onSubmit() {
+    if (this.loginForm.invalid) return;
+    this.loading = true;
+    this.auth.login(this.loginForm.value).subscribe({
+      next: () => this.router.navigate(['/']),
+      error: err => {
+        this.error = err.error?.message || 'Login failed';
+        this.loading = false;
+      }
+    });
+  }
+}
+```
+
+**login.html**
+```html
+<form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+  <div class="mb-3">
+    <label>Email</label>
+    <input formControlName="email" type="email" class="form-control" />
+    <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="text-danger">Valid email required</div>
+  </div>
+  <div class="mb-3">
+    <label>Password</label>
+    <input formControlName="password" type="password" class="form-control" />
+    <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="text-danger">Password required</div>
+  </div>
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+  <button class="btn btn-primary w-100" [disabled]="loading">Login</button>
+</form>
+```
+
+**login.css**
+```css
+/* Basic styling for login form */
+form {
+  max-width: 350px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+```
+
 **Screenshots:**
 
 ![Login Page](img/Login.png)
 _Login Page_
+
+---
+
+#### Registration Component (`/src/app/components/user/registration/`)
+
+**registration.ts**
+```typescript
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AuthService } from '../../shared/services/auth.service';
+import { Router } from '@angular/router';
+
+@Component({
+  selector: 'app-registration',
+  templateUrl: './registration.html',
+  styleUrls: ['./registration.css']
+})
+export class RegistrationComponent {
+  registerForm: FormGroup;
+  error: string = '';
+  success: string = '';
+  loading = false;
+
+  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
+    this.registerForm = this.fb.group({
+      fullName: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      phoneNumber: ['', Validators.required],
+      role: ['Tenant', Validators.required]
+    });
+  }
+
+  onSubmit() {
+    if (this.registerForm.invalid) return;
+    this.loading = true;
+    this.auth.register(this.registerForm.value).subscribe({
+      next: () => {
+        this.success = 'Registration successful! Please login.';
+        this.loading = false;
+        this.registerForm.reset();
+      },
+      error: err => {
+        this.error = err.error?.message || 'Registration failed';
+        this.loading = false;
+      }
+    });
+  }
+}
+```
+
+**registration.html**
+```html
+<form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+  <div class="mb-3">
+    <label>Full Name</label>
+    <input formControlName="fullName" class="form-control" />
+    <div *ngIf="registerForm.get('fullName')?.invalid && registerForm.get('fullName')?.touched" class="text-danger">Full name required</div>
+  </div>
+  <div class="mb-3">
+    <label>Email</label>
+    <input formControlName="email" type="email" class="form-control" />
+    <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="text-danger">Valid email required</div>
+  </div>
+  <div class="mb-3">
+    <label>Password</label>
+    <input formControlName="password" type="password" class="form-control" />
+    <div *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="text-danger">Password (min 6 chars) required</div>
+  </div>
+  <div class="mb-3">
+    <label>Phone Number</label>
+    <input formControlName="phoneNumber" class="form-control" />
+    <div *ngIf="registerForm.get('phoneNumber')?.invalid && registerForm.get('phoneNumber')?.touched" class="text-danger">Phone number required</div>
+  </div>
+  <div class="mb-3">
+    <label>Role</label>
+    <select formControlName="role" class="form-select">
+      <option value="Owner">Owner</option>
+      <option value="Tenant">Tenant</option>
+    </select>
+  </div>
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+  <div *ngIf="success" class="alert alert-success">{{ success }}</div>
+  <button class="btn btn-success w-100" [disabled]="loading">Register</button>
+</form>
+```
+
+**registration.css**
+```css
+form {
+  max-width: 400px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+```
+
+**Screenshots:**
 
 ![Registration Page](img/Registration.png)
 _Registration Page_
@@ -270,12 +447,70 @@ public async Task<IActionResult> DeleteLease(int leaseId) { ... }
 - **ApproveRejectLease:** Owner approves/rejects a lease, checks ownership, updates status.
 - **DeleteLease:** Owner deletes a lease if all related payments are marked as "Paid".
 
+<!-- Insert OwnerDashboard image here -->
+
+---
+
+### Owner Dashboard Component (`/src/app/components/user/ownerdashboard/`)
+
+**ownerdashboard.ts**
+- Handles dashboard data loading, API calls for properties, applications, maintenance, and activities.
+- Provides methods for dashboard actions (add/edit property, review applications, update maintenance status, etc.).
+- Uses Angular services for shared data and API integration.
+
+**ownerdashboard.html**
+- Displays dashboard header, stats cards, property list, quick actions, recent applications, recent activity, and maintenance requests.
+- Uses Angular bindings and event handlers for interactivity.
+
+**ownerdashboard.css**
+- Provides modern, responsive styling for the dashboard layout, cards, and UI elements.
+
+**Example Usage:**
+```typescript
+// ...existing code...
+@Component({
+  standalone: true,
+  imports: [CommonModule, OwnerNavbar],
+  selector: 'app-owner-dashboard',
+  templateUrl: './ownerdashboard.html',
+  styleUrls: ['./ownerdashboard.css'],
+})
+export class OwnerDashboardComponent implements OnInit {
+  // ...existing code...
+}
+```
+
+```html
+<!-- ...existing code... -->
+<div class="dashboard-header">
+  <h1>Owner Dashboard</h1>
+  <p>Welcome back, {{ ownerName }}</p>
+</div>
+<!-- ...dashboard stats, properties, quick actions, recent activity, maintenance requests... -->
+```
+
+```css
+/* ...existing code... */
+.dashboard-container {
+  /* Responsive, modern dashboard styling */
+}
+```
+
+**Key Features:**
+- Loads and displays property, lease, application, and maintenance data for the owner.
+- Provides quick actions for property management, reviewing applications, and handling maintenance.
+- Responsive and visually appealing UI.
+
+Refer to the files in `/src/app/components/user/ownerdashboard/` for the full implementation.
+
 **Screenshot:**
 
 ![Owner Dashboard](img/OwnerDashboard.png)
 _Owner Dashboard_
 
 ---
+
+
 
 ### 3. Tenant Dashboard
 
@@ -310,10 +545,7 @@ public async Task<IActionResult> GetAllProperties([FromQuery] string? filterOn, 
 
 - **GetAllProperties:** Returns all available properties, supports filtering by criteria.
 
-**Screenshot:**
-
-![Tenant Dashboard](img/TenantDashboard.png)
-_Tenant Dashboard_
+<!-- Insert TenantDashboard image here -->
 
 ---
 
@@ -368,6 +600,341 @@ public async Task<IActionResult> DeleteProperty(int propertyId) { ... }
 - **GetPropertyById:** Tenant/Owner retrieves property details.
 - **UpdateProperty:** Owner updates property details.
 - **DeleteProperty:** Owner deletes a property if allowed.
+
+<!-- Insert Property Management image here -->
+
+### Property Management Components
+
+#### AddProperty (`/src/app/features/Property/add-property/`)
+
+- **add-property.ts**: Angular component for adding a new property. Handles form creation, validation, image upload, and submission to the backend.
+- **add-property.html**: Form UI for property details, image upload, and validation feedback.
+- **add-property.css**: Modern, responsive styles for the add property form.
+
+**Key Features:**
+- Reactive form with validation for address, rent, status, image, and description.
+- Image preview and removal logic.
+- Submits property data (including image) to the backend.
+
+#### PropertyList (`/src/app/features/Property/property-list/`)
+
+- **property-list.ts**: Lists all properties, supports filtering (for tenants), and provides update/delete actions (for owners).
+- **property-list.html**: Displays property cards with images, details, and action buttons.
+- **property-list.css**: Card-based, responsive layout for property listings.
+
+**Key Features:**
+- Role-based UI: Owners can update/delete, tenants can filter and view details.
+- Filter by address, status, and max rent.
+- Uses Angular services for API calls and Toastr for notifications.
+
+#### UpdateProperty (`/src/app/features/Property/update-property/`)
+
+- **update-property.ts**: Angular component for editing an existing property. Loads property data, allows updating fields and image, and submits changes.
+- **update-property.html**: Similar form UI as AddProperty, with pre-filled values and optional image update.
+- **update-property.css**: Shares styles with AddProperty for consistency.
+
+**Key Features:**
+- Loads property by ID and pre-fills form.
+- Allows updating all fields and replacing/removing the image.
+- Handles form validation and submission to backend.
+
+#### PropertyPage (`/src/app/components/property-page/`)
+
+- **property-page.ts**: Displays detailed information for a single property, including image, address, rent, status, and description.
+- **property-page.html**: Card layout for property details and a button to request a lease.
+- **property-page.css**: Clean, modern styles for the property detail view.
+
+**Key Features:**
+- Loads property details by ID from the route.
+- Shows all property info and image.
+- Provides a button to initiate a lease request.
+
+**Screenshot:**
+
+![Tenant Dashboard](img/TenantDashboard.png)
+_Tenant Dashboard_
+
+---
+
+### Property Management Components: Code Samples
+
+#### AddProperty (`/src/app/features/Property/add-property/`)
+
+**add-property.ts**
+```typescript
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { PropertyService } from '../../shared/services/property.service';
+import { Router } from '@angular/router';
+
+@Component({
+  selector: 'app-add-property',
+  templateUrl: './add-property.html',
+  styleUrls: ['./add-property.css']
+})
+export class AddPropertyComponent {
+  propertyForm: FormGroup;
+  imagePreview: string | ArrayBuffer | null = null;
+  loading = false;
+
+  constructor(private fb: FormBuilder, private propertyService: PropertyService, private router: Router) {
+    this.propertyForm = this.fb.group({
+      address: ['', Validators.required],
+      rent: ['', [Validators.required, Validators.min(1)]],
+      status: ['Available', Validators.required],
+      image: [null, Validators.required],
+      description: ['']
+    });
+  }
+
+  onImageChange(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.propertyForm.patchValue({ image: file });
+      const reader = new FileReader();
+      reader.onload = () => (this.imagePreview = reader.result);
+      reader.readAsDataURL(file);
+    }
+  }
+
+  onSubmit() {
+    if (this.propertyForm.invalid) return;
+    const formData = new FormData();
+    Object.entries(this.propertyForm.value).forEach(([key, value]) => formData.append(key, value));
+    this.loading = true;
+    this.propertyService.addProperty(formData).subscribe({
+      next: () => this.router.navigate(['/property-list']),
+      complete: () => (this.loading = false)
+    });
+  }
+}
+```
+
+**add-property.html**
+```html
+<form [formGroup]="propertyForm" (ngSubmit)="onSubmit()">
+  <input formControlName="address" placeholder="Address" />
+  <input formControlName="rent" type="number" placeholder="Rent" />
+  <select formControlName="status">
+    <option value="Available">Available</option>
+    <option value="Rented">Rented</option>
+  </select>
+  <input type="file" (change)="onImageChange($event)" />
+  <img *ngIf="imagePreview" [src]="imagePreview" width="120" />
+  <textarea formControlName="description" placeholder="Description"></textarea>
+  <button [disabled]="loading">Add Property</button>
+</form>
+```
+
+**add-property.css**
+```css
+form {
+  max-width: 400px;
+  margin: 2rem auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+```
+
+#### PropertyList (`/src/app/features/Property/property-list/`)
+
+**property-list.ts**
+```typescript
+import { Component, OnInit } from '@angular/core';
+import { PropertyService } from '../../shared/services/property.service';
+
+@Component({
+  selector: 'app-property-list',
+  templateUrl: './property-list.html',
+  styleUrls: ['./property-list.css']
+})
+export class PropertyListComponent implements OnInit {
+  properties = [];
+  constructor(private propertyService: PropertyService) {}
+  ngOnInit() {
+    this.propertyService.getProperties().subscribe(data => (this.properties = data));
+  }
+}
+```
+
+**property-list.html**
+```html
+<div class="property-list">
+  <div *ngFor="let property of properties" class="property-card">
+    <img [src]="property.imageUrl" alt="Property" />
+    <div>{{ property.address }}</div>
+    <div>₹{{ property.rent }}</div>
+    <div>{{ property.status }}</div>
+    <a [routerLink]="['/property', property.id]">View</a>
+  </div>
+</div>
+```
+
+**property-list.css**
+```css
+.property-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.property-card {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 1rem;
+  width: 220px;
+  background: #fff;
+}
+.property-card img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+```
+
+#### UpdateProperty (`/src/app/features/Property/update-property/`)
+
+**update-property.ts**
+```typescript
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { PropertyService } from '../../shared/services/property.service';
+
+@Component({
+  selector: 'app-update-property',
+  templateUrl: './update-property.html',
+  styleUrls: ['./update-property.css']
+})
+export class UpdatePropertyComponent implements OnInit {
+  propertyForm: FormGroup;
+  imagePreview: string | ArrayBuffer | null = null;
+  loading = false;
+  constructor(
+    private fb: FormBuilder,
+    private route: ActivatedRoute,
+    private propertyService: PropertyService,
+    private router: Router
+  ) {
+    this.propertyForm = this.fb.group({
+      address: ['', Validators.required],
+      rent: ['', [Validators.required, Validators.min(1)]],
+      status: ['Available', Validators.required],
+      image: [null],
+      description: ['']
+    });
+  }
+  ngOnInit() {
+    const id = this.route.snapshot.paramMap.get('id');
+    this.propertyService.getPropertyById(id).subscribe(property => {
+      this.propertyForm.patchValue(property);
+      this.imagePreview = property.imageUrl;
+    });
+  }
+  onImageChange(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.propertyForm.patchValue({ image: file });
+      const reader = new FileReader();
+      reader.onload = () => (this.imagePreview = reader.result);
+      reader.readAsDataURL(file);
+    }
+  }
+  onSubmit() {
+    if (this.propertyForm.invalid) return;
+    const id = this.route.snapshot.paramMap.get('id');
+    const formData = new FormData();
+    Object.entries(this.propertyForm.value).forEach(([key, value]) => formData.append(key, value));
+    this.loading = true;
+    this.propertyService.updateProperty(id, formData).subscribe({
+      next: () => this.router.navigate(['/property-list']),
+      complete: () => (this.loading = false)
+    });
+  }
+}
+```
+
+**update-property.html**
+```html
+<form [formGroup]="propertyForm" (ngSubmit)="onSubmit()">
+  <input formControlName="address" placeholder="Address" />
+  <input formControlName="rent" type="number" placeholder="Rent" />
+  <select formControlName="status">
+    <option value="Available">Available</option>
+    <option value="Rented">Rented</option>
+  </select>
+  <input type="file" (change)="onImageChange($event)" />
+  <img *ngIf="imagePreview" [src]="imagePreview" width="120" />
+  <textarea formControlName="description" placeholder="Description"></textarea>
+  <button [disabled]="loading">Update Property</button>
+</form>
+```
+
+**update-property.css**
+```css
+form {
+  max-width: 400px;
+  margin: 2rem auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+```
+
+#### PropertyPage (`/src/app/components/property-page/`)
+
+**property-page.ts**
+```typescript
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { PropertyService } from '../../shared/services/property.service';
+
+@Component({
+  selector: 'app-property-page',
+  templateUrl: './property-page.html',
+  styleUrls: ['./property-page.css']
+})
+export class PropertyPageComponent implements OnInit {
+  property: any;
+  constructor(private route: ActivatedRoute, private propertyService: PropertyService) {}
+  ngOnInit() {
+    const id = this.route.snapshot.paramMap.get('id');
+    this.propertyService.getPropertyById(id).subscribe(data => (this.property = data));
+  }
+}
+```
+
+**property-page.html**
+```html
+<div *ngIf="property" class="property-detail">
+  <img [src]="property.imageUrl" alt="Property" />
+  <h2>{{ property.address }}</h2>
+  <div>₹{{ property.rent }}</div>
+  <div>{{ property.status }}</div>
+  <p>{{ property.description }}</p>
+  <button>Request Lease</button>
+</div>
+```
+
+**property-page.css**
+```css
+.property-detail {
+  max-width: 500px;
+  margin: 2rem auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  padding: 2rem;
+  text-align: center;
+}
+.property-detail img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+```
 
 **Screenshots:**
 
@@ -436,6 +1003,165 @@ _Lease Request (Tenant)_
 
 ---
 
+### Lease Management Components: Code Samples
+
+#### GetLeaseOwner (`/src/app/components/getleaseowner/`)
+
+**getleaseowner.ts**
+```typescript
+import { Component, OnInit } from '@angular/core';
+import { LeaseService } from '../../shared/services/lease.service';
+
+@Component({
+  selector: 'app-getleaseowner',
+  templateUrl: './getleaseowner.html',
+  styleUrls: ['./getleaseowner.css']
+})
+export class GetLeaseOwnerComponent implements OnInit {
+  leases = [];
+  constructor(private leaseService: LeaseService) {}
+  ngOnInit() {
+    this.leaseService.getOwnerLeases().subscribe(data => (this.leases = data));
+  }
+  approveLease(id: number) {
+    this.leaseService.approveLease(id).subscribe(() => this.ngOnInit());
+  }
+  rejectLease(id: number) {
+    this.leaseService.rejectLease(id).subscribe(() => this.ngOnInit());
+  }
+}
+```
+
+**getleaseowner.html**
+```html
+<div *ngFor="let lease of leases" class="lease-card">
+  <div>Tenant: {{ lease.tenantName }}</div>
+  <div>Property: {{ lease.propertyAddress }}</div>
+  <div>Status: {{ lease.status }}</div>
+  <button (click)="approveLease(lease.id)" [disabled]="lease.status !== 'Pending'">Approve</button>
+  <button (click)="rejectLease(lease.id)" [disabled]="lease.status !== 'Pending'">Reject</button>
+</div>
+```
+
+**getleaseowner.css**
+```css
+.lease-card {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: #fff;
+}
+```
+
+#### LeaseFormTenant (`/src/app/leaseformtenant/`)
+
+**leaseformtenant.ts**
+```typescript
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { LeaseService } from '../shared/services/lease.service';
+import { Router } from '@angular/router';
+
+@Component({
+  selector: 'app-leaseformtenant',
+  templateUrl: './leaseformtenant.html',
+  styleUrls: ['./leaseformtenant.css']
+})
+export class LeaseFormTenantComponent {
+  leaseForm: FormGroup;
+  loading = false;
+  constructor(private fb: FormBuilder, private leaseService: LeaseService, private router: Router) {
+    this.leaseForm = this.fb.group({
+      propertyId: ['', Validators.required],
+      startDate: ['', Validators.required],
+      endDate: ['', Validators.required],
+      digitalSignature: ['', Validators.required]
+    });
+  }
+  onSubmit() {
+    if (this.leaseForm.invalid) return;
+    this.loading = true;
+    this.leaseService.requestLease(this.leaseForm.value).subscribe({
+      next: () => this.router.navigate(['/leasetenant-page']),
+      complete: () => (this.loading = false)
+    });
+  }
+}
+```
+
+**leaseformtenant.html**
+```html
+<form [formGroup]="leaseForm" (ngSubmit)="onSubmit()">
+  <input formControlName="propertyId" placeholder="Property ID" />
+  <input formControlName="startDate" type="date" placeholder="Start Date" />
+  <input formControlName="endDate" type="date" placeholder="End Date" />
+  <input formControlName="digitalSignature" placeholder="Digital Signature" />
+  <button [disabled]="loading">Request Lease</button>
+</form>
+```
+
+**leaseformtenant.css**
+```css
+form {
+  max-width: 400px;
+  margin: 2rem auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+```
+
+#### AgreementPage (`/src/app/agreement-page/`)
+
+**agreement-page.ts**
+```typescript
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { LeaseService } from '../shared/services/lease.service';
+
+@Component({
+  selector: 'app-agreement-page',
+  templateUrl: './agreement-page.html',
+  styleUrls: ['./agreement-page.css']
+})
+export class AgreementPageComponent implements OnInit {
+  agreement: any;
+  constructor(private route: ActivatedRoute, private leaseService: LeaseService) {}
+  ngOnInit() {
+    const id = this.route.snapshot.paramMap.get('id');
+    this.leaseService.getAgreement(id).subscribe(data => (this.agreement = data));
+  }
+}
+```
+
+**agreement-page.html**
+```html
+<div *ngIf="agreement" class="agreement-detail">
+  <h2>Lease Agreement</h2>
+  <div>Tenant: {{ agreement.tenantName }}</div>
+  <div>Property: {{ agreement.propertyAddress }}</div>
+  <div>Start: {{ agreement.startDate }}</div>
+  <div>End: {{ agreement.endDate }}</div>
+  <div>Status: {{ agreement.status }}</div>
+  <div>Signature: {{ agreement.digitalSignature }}</div>
+</div>
+```
+
+**agreement-page.css**
+```css
+.agreement-detail {
+  max-width: 500px;
+  margin: 2rem auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  padding: 2rem;
+}
+```
+
+---
+
 ### 6. Maintenance Requests
 
 **Frontend Components:**
@@ -484,13 +1210,102 @@ public async Task<IActionResult> DeleteMaintenanceRequest([FromRoute] int reques
 - **UpdateMaintenanceStatus:** Owner updates the status of a request.
 - **DeleteMaintenanceRequest:** Owner deletes a request if its status is "terminated".
 
-**Screenshots:**
-
 ![Maintenance Page (Owner)](img/MaintenancePageOwner.png)
 _Maintenance Requests (Owner)_
 
 ![Maintenance Page (Tenant)](img/MaintenancePageTenant.png)
 _Maintenance Requests (Tenant)_
+---
+
+### Maintenance Requests Components: Code Samples
+
+#### MaintenanceDashboardOwner (`/src/app/components/maintenancedashboardowner/`)
+
+**maintenancedashboardowner.ts**
+```typescript
+import { Component, OnInit } from '@angular/core';
+import { MaintenanceService } from '../../shared/services/maintenance.service';
+
+@Component({
+  selector: 'app-maintenancedashboardowner',
+  templateUrl: './maintenancedashboardowner.html',
+  styleUrls: ['./maintenancedashboardowner.css']
+})
+export class MaintenanceDashboardOwnerComponent implements OnInit {
+  requests = [];
+  constructor(private maintenanceService: MaintenanceService) {}
+  ngOnInit() {
+    this.maintenanceService.getOwnerRequests().subscribe(data => (this.requests = data));
+  }
+  updateStatus(id: number, status: string) {
+    this.maintenanceService.updateStatus(id, status).subscribe(() => this.ngOnInit());
+  }
+}
+```
+
+**maintenancedashboardowner.html**
+```html
+<div *ngFor="let req of requests" class="maintenance-card">
+  <div>Property: {{ req.propertyAddress }}</div>
+  <div>Tenant: {{ req.tenantName }}</div>
+  <div>Description: {{ req.description }}</div>
+  <div>Status: {{ req.status }}</div>
+  <button (click)="updateStatus(req.id, 'In Progress')" [disabled]="req.status !== 'Pending'">Start</button>
+  <button (click)="updateStatus(req.id, 'Completed')" [disabled]="req.status !== 'In Progress'">Complete</button>
+</div>
+```
+
+**maintenancedashboardowner.css**
+```css
+.maintenance-card {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: #fff;
+}
+```
+
+#### MaintenanceDashboardTenant (`/src/app/components/maintenancedashboardtenant/`)
+
+**maintenancedashboardtenant.ts**
+```typescript
+import { Component, OnInit } from '@angular/core';
+import { MaintenanceService } from '../../shared/services/maintenance.service';
+
+@Component({
+  selector: 'app-maintenancedashboardtenant',
+  templateUrl: './maintenancedashboardtenant.html',
+  styleUrls: ['./maintenancedashboardtenant.css']
+})
+export class MaintenanceDashboardTenantComponent implements OnInit {
+  requests = [];
+  constructor(private maintenanceService: MaintenanceService) {}
+  ngOnInit() {
+    this.maintenanceService.getTenantRequests().subscribe(data => (this.requests = data));
+  }
+}
+```
+
+**maintenancedashboardtenant.html**
+```html
+<div *ngFor="let req of requests" class="maintenance-card">
+  <div>Property: {{ req.propertyAddress }}</div>
+  <div>Description: {{ req.description }}</div>
+  <div>Status: {{ req.status }}</div>
+</div>
+```
+
+**maintenancedashboardtenant.css**
+```css
+.maintenance-card {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: #fff;
+}
+```
 
 ---
 
@@ -536,13 +1351,130 @@ public async Task<IActionResult> CreatePayment([FromBody] PaymentDTO paymentDto)
 - **GetPaymentsByLeaseId:** Retrieves payments for a specific lease.
 - **CreatePayment:** Tenant creates a new payment.
 
-**Screenshots:**
-
 ![Payment Page (Owner)](img/PaymentPageOwner.png)
 _Payment Dashboard (Owner)_
 
 ![Payment Page (Tenant)](img/PaymentPageTenant.png)
 _Payment Dashboard (Tenant)_
+---
+
+### Payments Components: Code Samples
+
+#### PaymentDashboard (`/src/app/components/payment-dashboard/`)
+
+**payment-dashboard.ts**
+```typescript
+import { Component, OnInit } from '@angular/core';
+import { PaymentService } from '../../shared/services/payment.service';
+
+@Component({
+  selector: 'app-payment-dashboard',
+  templateUrl: './payment-dashboard.html',
+  styleUrls: ['./payment-dashboard.css']
+})
+export class PaymentDashboardComponent implements OnInit {
+  payments = [];
+  constructor(private paymentService: PaymentService) {}
+  ngOnInit() {
+    this.paymentService.getPayments().subscribe(data => (this.payments = data));
+  }
+}
+```
+
+**payment-dashboard.html**
+```html
+<div class="payment-list">
+  <div *ngFor="let payment of payments" class="payment-card">
+    <div>Lease: {{ payment.leaseId }}</div>
+    <div>Amount: ₹{{ payment.amount }}</div>
+    <div>Status: {{ payment.status }}</div>
+    <div>Date: {{ payment.date | date:'shortDate' }}</div>
+  </div>
+</div>
+```
+
+**payment-dashboard.css**
+```css
+.payment-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.payment-card {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 1rem;
+  width: 220px;
+  background: #fff;
+}
+```
+
+#### PaymentPage (`/src/app/payment-page/`)
+
+**payment-page.ts**
+```typescript
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { PaymentService } from '../shared/services/payment.service';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+
+@Component({
+  selector: 'app-payment-page',
+  templateUrl: './payment-page.html',
+  styleUrls: ['./payment-page.css']
+})
+export class PaymentPageComponent implements OnInit {
+  paymentForm: FormGroup;
+  leaseId: string | null = null;
+  loading = false;
+  constructor(
+    private fb: FormBuilder,
+    private route: ActivatedRoute,
+    private paymentService: PaymentService,
+    private router: Router
+  ) {
+    this.paymentForm = this.fb.group({
+      amount: ['', [Validators.required, Validators.min(1)]],
+      method: ['UPI', Validators.required]
+    });
+  }
+  ngOnInit() {
+    this.leaseId = this.route.snapshot.paramMap.get('leaseId');
+  }
+  onSubmit() {
+    if (this.paymentForm.invalid || !this.leaseId) return;
+    this.loading = true;
+    const payload = { ...this.paymentForm.value, leaseId: this.leaseId };
+    this.paymentService.makePayment(payload).subscribe({
+      next: () => this.router.navigate(['/payment-dashboard']),
+      complete: () => (this.loading = false)
+    });
+  }
+}
+```
+
+**payment-page.html**
+```html
+<form [formGroup]="paymentForm" (ngSubmit)="onSubmit()">
+  <input formControlName="amount" type="number" placeholder="Amount" />
+  <select formControlName="method">
+    <option value="UPI">UPI</option>
+    <option value="Card">Card</option>
+  </select>
+  <button [disabled]="loading">Pay</button>
+</form>
+```
+
+**payment-page.css**
+```css
+form {
+  max-width: 400px;
+  margin: 2rem auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+```
 
 ---
 
@@ -557,21 +1489,14 @@ _Payment Dashboard (Tenant)_
 
 - JWT authentication and role-based authorization handled in backend (middleware, not a specific controller).
 
-**Screenshots:**
-
-![Home Page](img/Home.png)
-_Home Page_
-
 ---
 
 ## Feature Modules
 
-- **AddProperty**: Add new property
-  <!-- Insert AddProperty image here -->
-- **PropertyList**: List/filter properties
-  <!-- Insert PropertyList image here -->
-- **UpdateProperty**: Edit property
-  <!-- Insert UpdateProperty image here -->
+**Screenshots:**
+
+![Home Page](img/Home.png)
+_Home Page_
 
 ---
 
@@ -596,3 +1521,6 @@ _Home Page_
 # Contact
 
 - [Your contact info or team email]
+
+---
+
