@@ -1,0 +1,39 @@
+<app-owner-navbar></app-owner-navbar>
+<div class="container mt-5">
+  <h2 class="mb-4">All Maintenance Requests</h2>
+  <table class="table table-bordered table-hover">
+    <thead class="table-light">
+      <tr>
+        <th>Tenant Name</th>
+        <th>Issue Description</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let req of maintenanceRequests">
+        <td>{{ req.tenantFullName }}</td> 
+        <td>{{ req.issueDescription }}</td>
+
+        <td>{{ req.status }}</td>
+        <td>
+          <button
+            class="btn btn-success btn-sm me-2"
+            (click)="updateStatus(req, 'Active')"
+            [disabled]="req.status === 'Active' || req.status === 'Terminated'"
+          >
+            Set Active
+          </button>
+
+          <button
+            class="btn btn-danger btn-sm"
+            (click)="updateStatus(req, 'Terminated')"
+            [disabled]="req.status === 'Terminated'"
+          >
+            Set Terminated
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

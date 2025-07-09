@@ -1,0 +1,22 @@
+<app-tenant-navbar></app-tenant-navbar>
+<div class="container mt-4">
+  <div *ngIf="isLoading" class="alert alert-info">Loading...</div>
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+  <table *ngIf="!isLoading && !error && maintenanceRequests.length > 0" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+      <tr>
+        <th>Issue</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let req of maintenanceRequests">
+        <td>{{ req.issueDescription }}</td>
+        <td>{{ req.status }}</td>
+      </tr>
+    </tbody>
+  </table>
+  <div *ngIf="!isLoading && !error && maintenanceRequests.length === 0" class="alert alert-warning">
+    No maintenance requests found.
+  </div>
+</div>

@@ -1,0 +1,51 @@
+<ng-container *ngIf="userRole === 'Owner'; else tenantNav">
+  <app-owner-navbar></app-owner-navbar>
+</ng-container>
+<ng-template #tenantNav>
+  <app-tenant-navbar></app-tenant-navbar>
+</ng-template>
+
+<div class="container mt-4">
+  <h2>Payment Dashboard</h2>
+  <div *ngIf="isLoading" class="alert alert-info">Loading payments...</div>
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+  <table
+    *ngIf="!isLoading && payments.length > 0"
+    class="table table-bordered table-striped table-hover mt-3"
+  >
+    <thead class="thead-dark">
+      <tr>
+        <th>Tenant Name</th>
+        <th>Amount</th>
+        <th>Payment Date</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let payment of payments">
+        <td>
+          <span
+            *ngIf="payment.tenantName && payment.tenantName !== '-' else noTenant"
+          >
+            {{ payment.tenantName }}
+          </span>
+          <ng-template #noTenant>
+            <span title="Tenant name not found for this lease">-</span>
+          </ng-template>
+        </td>
+        <td>{{ payment.amount | currency:'INR':'symbol' }}</td>
+        <td>
+          {{ payment.paymentDate ? (payment.paymentDate | date:'mediumDate') :
+          '-' }}
+        </td>
+        <td>{{ payment.status }}</td>
+      </tr>
+    </tbody>
+  </table>
+  <div
+    *ngIf="!isLoading && payments.length === 0 && !error"
+    class="alert alert-warning mt-3"
+  >
+    No payments found.
+  </div>
+</div>

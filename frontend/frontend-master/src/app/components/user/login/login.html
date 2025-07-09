@@ -1,0 +1,52 @@
+<app-navbar></app-navbar>
+<div class="container pt-5">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <h3 class="mb-4">Login</h3>
+    <div class="form-group mb-3">
+      <label for="email" class="form-label">Email</label>
+      <input
+        type="email"
+        id="email"
+        class="form-control"
+        formControlName="email"
+        placeholder="Enter your email"
+      />
+      <div
+        class="error-feedback"
+        *ngIf="hasDisplayError('email') && form.controls['email'].hasError('required')"
+      >
+        Email is required
+      </div>
+      <div
+        class="error-feedback"
+        *ngIf="hasDisplayError('email') && form.controls['email'].hasError('email')"
+      >
+        Enter a valid email address
+      </div>
+    </div>
+    <div class="form-group mb-3">
+      <label for="password" class="form-label">Password</label>
+      <input
+        type="password"
+        id="password"
+        class="form-control"
+        formControlName="password"
+        placeholder="Enter your password"
+      />
+      <div
+        class="error-feedback"
+        *ngIf="hasDisplayError('password') && form.controls['password'].hasError('required')"
+      >
+        Password is required
+      </div>
+    </div>
+    <div class="d-grid">
+      <button type="submit" class="btn btn-primary">Login</button>
+    </div>
+    <div class="d-grid mt-3">
+      <button type="button" class="btn btn-secondary" [routerLink]="['/registration']">
+        Don't have an account? Register
+      </button>
+    </div>
+  </form>
+</div>

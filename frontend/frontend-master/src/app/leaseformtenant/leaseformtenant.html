@@ -1,0 +1,29 @@
+<!-- lease-request.component.html -->
+<form (ngSubmit)="submitLease()" [formGroup]="leaseForm" enctype="multipart/form-data" class="p-4 border rounded bg-light">
+  <div class="mb-3">
+    <label for="propertyId" class="form-label">Property ID</label>
+    <input type="number" id="propertyId" formControlName="propertyId" class="form-control" required [disabled]="true">
+  </div>
+
+  <div class="mb-3">
+    <label for="startDate" class="form-label">Start Date</label>
+    <input type="date" id="startDate" formControlName="startDate" class="form-control" required [min]="today">
+  </div>
+
+  <div class="mb-3">
+    <label for="endDate" class="form-label">End Date</label>
+    <input type="date" id="endDate" formControlName="endDate" class="form-control" required [min]="today">
+  </div>
+
+  <div class="mb-3">
+    <label for="proposedRentAmount" class="form-label">Proposed Rent Amount</label>
+    <input type="number" id="proposedRentAmount" formControlName="proposedRentAmount" class="form-control" [disabled]="true">
+  </div>
+
+  <div class="mb-3">
+    <label for="digitalSignature" class="form-label">Digital Signature</label>
+    <input type="file" (change)="onFileSelected($event)" accept="image/*" class="form-control" />
+  </div>
+
+  <button type="submit" class="btn btn-primary" [disabled]="leaseForm.invalid">Submit Lease Request</button>
+</form>

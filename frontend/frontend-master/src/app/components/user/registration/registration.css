@@ -1,0 +1,157 @@
+/* registration.component.css */
+
+/* Overall container for the registration page */
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* Full viewport height */
+    /* background: linear-gradient(135deg, #0084ff 0%, #6a11cb 100%); Slightly different gradient for variety */
+    padding: 20px;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  /* Styling for the form wrapper */
+  form {
+    background: rgba(255, 255, 255, 0.95); /* Slightly transparent white background */
+    padding: 40px;
+    border-radius: 15px; /* Rounded corners */
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2); /* Deeper shadow for pop-out effect */
+    max-width: 500px; /* Slightly wider for more fields */
+    width: 100%; /* Ensure it's responsive */
+    backdrop-filter: blur(8px); /* Subtle blur effect on background elements */
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Light border */
+    animation: fadeInScale 0.6s ease-out forwards; /* Animation on load */
+  }
+  
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: scale(0.9) translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+  
+  /* Form heading */
+  h3 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #343a40;
+    font-size: 2rem;
+    font-weight: 700;
+    position: relative;
+  }
+  
+  h3::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -10px;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background-color: #6a11cb; /* Matches secondary gradient color */
+    border-radius: 2px;
+  }
+  
+  /* Form group spacing */
+  .form-group {
+    margin-bottom: 25px;
+  }
+  
+  /* Labels */
+  .form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+    display: block;
+  }
+  
+  /* Form controls (inputs, select) */
+  .form-control {
+    border: 2px solid #ced4da;
+    border-radius: 8px;
+    padding: 12px 15px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+  }
+  
+  .form-control:focus {
+    border-color: #6a11cb; /* Highlight border on focus, matching the gradient */
+    box-shadow: 0 0 0 0.25rem rgba(106, 17, 203, 0.25); /* Glow effect on focus */
+    outline: none;
+  }
+  
+  /* Error feedback styling */
+  .error-feedback {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 5px;
+    animation: slideIn 0.3s ease-out;
+  }
+  
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Buttons */
+  .btn {
+    padding: 12px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    border: none;
+  }
+  
+  .btn-primary {
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    color: white;
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+  }
+  
+  .btn-primary:hover {
+    background: linear-gradient(45deg, #0056b3, #007bff);
+    box-shadow: 0 6px 15px rgba(0, 123, 255, 0.4);
+    transform: translateY(-2px);
+  }
+  
+  .btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    box-shadow: 0 4px 10px rgba(108, 117, 125, 0.2);
+  }
+  
+  .btn-secondary:hover {
+    background-color: #5a6268;
+    box-shadow: 0 6px 15px rgba(108, 117, 125, 0.3);
+    transform: translateY(-2px);
+  }
+  
+  /* d-grid for full-width buttons */
+  .d-grid button {
+    width: 100%;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 576px) {
+    form {
+      padding: 30px 20px;
+      margin: 0 15px;
+    }
+  
+    h3 {
+      font-size: 1.75rem;
+    }
+  }

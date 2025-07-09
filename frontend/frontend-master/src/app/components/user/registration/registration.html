@@ -1,0 +1,133 @@
+<app-navbar></app-navbar>
+<div class="container pt-5">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <h3 class="mb-4">Registration</h3>
+      <div class="form-group mb-3">
+        <label for="fullName" class="form-label">Full Name</label>
+        <input
+          type="text"
+          id="fullName"
+          class="form-control"
+          formControlName="fullName"
+          placeholder="Enter your full name"
+        />
+        <div
+          class="error-feedback"
+          *ngIf="hasDisplayError('fullName') && form.controls['fullName'].hasError('required')"
+        >
+          Full Name is required
+        </div>
+      </div>
+      <div class="form-group mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input
+          type="email"
+          id="email"
+          class="form-control"
+          formControlName="email"
+          placeholder="Enter your email"
+        />
+        <div
+          class="error-feedback"
+          *ngIf="hasDisplayError('email') && form.controls['email'].hasError('required')"
+        >
+          Email is required
+        </div>
+        <div
+          class="error-feedback"
+          *ngIf="hasDisplayError('email') && form.controls['email'].hasError('email')"
+        >
+          Enter a valid email address
+        </div>
+      </div>
+      <div class="form-group mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input
+          type="password"
+          id="password"
+          class="form-control"
+          formControlName="password"
+          placeholder="Enter your password"
+        />
+        <div
+          class="error-feedback"
+          *ngIf="hasDisplayError('password') && form.controls['password'].hasError('required')"
+        >
+          Password is required
+        </div>
+        <div
+          class="error-feedback"
+          *ngIf="hasDisplayError('password') && form.controls['password'].hasError('minlength')"
+        >
+          Password must be at least 6 characters
+        </div>
+        <div
+          class="error-feedback"
+          *ngIf="hasDisplayError('password') && form.controls['password'].hasError('pattern')"
+        >
+          Password must contain at least one uppercase letter, one lowercase
+          letter, one number, and one special character (!#$%^&*) and be 8-32
+          characters long
+        </div>
+      </div>
+      <div class="form-group mb-3">
+        <label for="confirmPassword" class="form-label">Confirm Password</label>
+        <input
+          type="password"
+          id="confirmPassword"
+          class="form-control"
+          formControlName="confirmPassword"
+          placeholder="Confirm your password"
+        />
+        <div
+          class="error-feedback"
+          *ngIf="hasDisplayError('confirmPassword') && form.controls['confirmPassword'].hasError('passwordMismatch')"
+        >
+          Passwords do not match
+        </div>
+      </div>
+      <div class="form-group mb-3">
+        <label for="phoneNumber" class="form-label">Phone Number</label>
+        <input
+          id="phoneNumber"
+          class="form-control"
+          formControlName="phoneNumber"
+          placeholder="Enter your phone number"
+        />
+        <div
+          class="error-feedback"
+          *ngIf="hasDisplayError('phoneNumber') && form.controls['phoneNumber'].hasError('required')"
+        >
+          Phone Number is required
+        </div>
+        <div
+          class="error-feedback"
+          *ngIf="hasDisplayError('phoneNumber') && form.controls['phoneNumber'].hasError('pattern')"
+        >
+          Phone Number must be exactly 10 digits
+        </div>
+      </div>
+      <div class="form-group mb-3">
+        <label for="role" class="form-label">Role</label>
+        <select id="role" class="form-control" formControlName="role">
+          <option value="">Select role</option>
+          <option value="Owner">Owner</option>
+          <option value="Tenant">Tenant</option>
+        </select>
+        <div
+          class="error-feedback"
+          *ngIf="hasDisplayError('role') && form.controls['role'].hasError('required')"
+        >
+          Role is required
+        </div>
+      </div>
+      <div class="d-grid">
+        <button type="submit" class="btn btn-primary">Register</button>
+      </div>
+      <div class="d-grid mt-3">
+        <button type="button" class="btn btn-secondary" routerLink="/login">
+          Already have an account? Login
+        </button>
+      </div>
+    </form>
+  </div>

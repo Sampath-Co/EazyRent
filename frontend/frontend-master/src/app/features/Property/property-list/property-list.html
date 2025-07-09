@@ -1,0 +1,103 @@
+<ng-container *ngIf="userRole === 'Owner'; else tenantNavbar">
+  <app-owner-navbar></app-owner-navbar>
+</ng-container>
+<ng-template #tenantNavbar>
+  <app-tenant-navbar></app-tenant-navbar>
+</ng-template>
+
+<div class="property-list-container">
+  <div class="container mt-4">
+    <!-- Filters Section -->
+    <div *ngIf="userRole === 'Tenant'" class="filters mb-4">
+      <div class="row">
+        <div class="col-md-4">
+          <label for="filterOn" class="form-label">Filter By</label>
+          <select id="filterOn" class="form-select" [(ngModel)]="filterOn">
+            <option value="">Select Filter</option>
+            <option value="address">Address</option>
+            <option value="availabilityStatus">Availability Status</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label for="filterQuery" class="form-label">Filter Query</label>
+          <input
+            id="filterQuery"
+            type="text"
+            class="form-control"
+            [(ngModel)]="filterQuery"
+            placeholder="Enter filter value"
+          />
+        </div>
+        <div class="col-md-4">
+          <label for="filterRent" class="form-label">Max Rent</label>
+          <input
+            id="filterRent"
+            type="number"
+            class="form-control"
+            [(ngModel)]="filterRent"
+            placeholder="Enter max rent"
+          />
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-md-12 text-end">
+          <button class="btn btn-primary" (click)="applyFilters()">Apply Filters</button>
+          <button class="btn btn-secondary" (click)="resetFilters()">Reset Filters</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Property List -->
+    <div class="row">
+      <div *ngFor="let property of properties" class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+          <img
+            *ngIf="property.propertyImageBase64"
+            [src]="property.propertyImageBase64"
+            alt="Property Image"
+            class="card-img-top"
+          />
+          <div class="card-body">
+            <h5 class="card-title">{{ property.address }}</h5>
+            <p class="card-text"><strong>Rent:</strong> {{ formatPrice(property.rentAmount) }}</p>
+            <p class="card-text"><strong>Status:</strong> {{ property.availabilityStatus }}</p>
+            <p class="card-text"><strong>Description:</strong> {{ property.propertyDescription }}</p>
+          </div>
+          <!-- <div class="card-footer">
+            <button
+              [routerLink]="['/property-page', property.propertyId]"
+              class="btn btn-sm btn-outline-info property-action-btn"
+            >
+              <i class="fas fa-info-circle"></i> More Info
+            </button>
+          </div> -->
+          <div class="card-footer">
+            <ng-container *ngIf="userRole === 'Owner'; else tenantActions">
+              <button
+                class="btn btn-sm btn-outline-warning me-2"
+                (click)="onUpdateProperty(property.propertyId)"
+              >
+                <i class="fas fa-edit"></i> Update
+              </button>
+              <button
+                class="btn btn-sm btn-outline-danger"
+                (click)="onDeleteProperty(property.propertyId)"
+              >
+                <i class="fas fa-trash-alt"></i> Delete
+              </button>
+            </ng-container>
+            <ng-template #tenantActions>
+              <button
+                [routerLink]="['/property-page', property.propertyId]"
+                class="btn btn-sm btn-outline-info property-action-btn"
+              >
+                <i class="fas fa-info-circle"></i> More Info
+              </button>
+            </ng-template>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

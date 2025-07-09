@@ -1,0 +1,21 @@
+<div class="agreement-container">
+  <h2>Lease Agreement</h2>
+  <p>Please review the following rules and regulations before proceeding:</p>
+
+  <ul class="agreement-rules">
+    <li>The tenant shall not sublet the property without prior written consent from the landlord.</li>
+    <li>The tenant is responsible for maintaining the property in good condition and reporting any damages promptly.</li>
+    <li>Rent must be paid on or before the due date each month.</li>
+    <li>Any modifications to the property must be approved by the landlord in writing.</li>
+    <li>Pets are not allowed unless explicitly permitted in the lease agreement.</li>
+    <li>Noise levels must be kept to a minimum to avoid disturbing neighbors.</li>
+    <li>The tenant must comply with all local laws and regulations during the lease period.</li>
+  </ul>
+
+  <div class="agreement-actions">
+    <label>
+      <input type="checkbox" [(ngModel)]="isAgreementAccepted" /> I accept the terms and conditions
+    </label>
+    <button class="btn btn-primary" (click)="acceptAgreement()" [disabled]="!isAgreementAccepted">Accept Agreement</button>
+  </div>
+</div>

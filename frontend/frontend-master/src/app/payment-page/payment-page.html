@@ -1,0 +1,39 @@
+<div class="payment-container">
+    <h2>Payment Page</h2>
+    <p>Rent Amount: {{ rentAmount | currency:'INR' }}</p>
+
+    <div class="payment-options">
+        <label>
+            <input type="radio" name="paymentMethod" [(ngModel)]="paymentMethod" value="upi" />
+            Pay via UPI
+        </label>
+        <label>
+            <input type="radio" name="paymentMethod" [(ngModel)]="paymentMethod" value="card" />
+            Pay via Card
+        </label>
+    </div>
+
+    <div *ngIf="paymentMethod === 'upi'" class="upi-input">
+        <label for="upiId">Enter UPI ID:</label>
+        <input id="upiId" type="text" [(ngModel)]="upiId" placeholder="example@upi" />
+    </div>
+
+    <div *ngIf="paymentMethod === 'card'" class="card-input">
+        <label for="cardNumber">Card Number:</label>
+        <input id="cardNumber" type="text" placeholder="1234 5678 9012 3456" />
+
+        <label for="expiryDate">Expiry Date:</label>
+        <input id="expiryDate" type="text" placeholder="MM/YY" />
+
+        <label for="cvv">CVV:</label>
+        <input id="cvv" type="password" placeholder="123" />
+    </div>
+
+    <button class="btn btn-success" (click)="makePayment()"
+        [disabled]="paymentSuccess || !isPaymentDetailsValid()">Pay</button>
+
+    <div *ngIf="paymentSuccess" class="success-animation">
+        <p>Payment Successful!</p>
+        <img src="/images/success-animation.gif" alt="Success Animation">
+    </div>
+</div>

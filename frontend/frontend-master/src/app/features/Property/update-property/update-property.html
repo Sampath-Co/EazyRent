@@ -1,0 +1,190 @@
+<div class="add-property-container">
+  <div class="form-wrapper">
+    <div class="form-header">
+      <h2 class="form-title">
+        <i class="fas fa-edit"></i> {{ isEditMode ? 'Update Property Details' :
+        'Add New Property' }}
+      </h2>
+      <p class="form-subtitle">
+        {{ isEditMode ? 'Modify the property information below' : 'Fill in the
+        details to list your property' }}
+      </p>
+    </div>
+
+    <form
+      [formGroup]="propertyForm"
+      (ngSubmit)="onSubmit()"
+      class="property-form"
+      enctype="multipart/form-data"
+    >
+      <div class="form-group">
+        <label for="address" class="form-label">
+          <i class="fas fa-map-marker-alt"></i>
+          Full Address *
+        </label>
+        <textarea
+          id="address"
+          formControlName="address"
+          class="form-control"
+          [class.is-invalid]="isFieldInvalid('address')"
+          rows="3"
+          placeholder="Enter complete address with landmarks"
+        ></textarea>
+        <div class="invalid-feedback" *ngIf="isFieldInvalid('address')">
+          Address is required
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="rentAmount" class="form-label">
+          <i class="fas fa-rupee-sign"></i>
+          Rent Amount (per 2 nights) *
+        </label>
+        <div class="input-group">
+          <span class="input-group-text">₹</span>
+          <input
+            type="number"
+            id="rentAmount"
+            formControlName="rentAmount"
+            class="form-control"
+            [class.is-invalid]="isFieldInvalid('rentAmount')"
+            placeholder="0"
+            min="0"
+          />
+        </div>
+        <div class="invalid-feedback" *ngIf="isFieldInvalid('rentAmount')">
+          <span *ngIf="propertyForm.get('rentAmount')?.errors?.['required']"
+            >Rent amount is required</span
+          >
+          <span *ngIf="propertyForm.get('rentAmount')?.errors?.['min']"
+            >Rent amount must be greater than 0</span
+          >
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          <i class="fas fa-check-circle"></i>
+          Availability Status *
+        </label>
+        <div class="status-options">
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="radio"
+              id="available"
+              formControlName="availabilityStatus"
+              value="Available"
+            />
+            <label class="form-check-label available" for="available">
+              <i class="fas fa-check-circle"></i>
+              Available
+            </label>
+          </div>
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="radio"
+              id="rented"
+              formControlName="availabilityStatus"
+              value="Rented"
+            />
+            <label class="form-check-label rented" for="rented">
+              <i class="fas fa-times-circle"></i>
+              Rented
+            </label>
+          </div>
+        </div>
+        <div
+          class="invalid-feedback"
+          *ngIf="isFieldInvalid('availabilityStatus')"
+        >
+          Please select availability status
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="propertyImage" class="form-label">
+          <i class="fas fa-camera"></i>
+          Property Image {{ isEditMode ? '' : '*' }}
+        </label>
+        <div class="image-upload-container">
+          <input
+            type="file"
+            id="propertyImage"
+            (change)="onImageSelect($event)"
+            accept="image/*"
+            class="d-none"
+            #fileInput
+          />
+          <div class="image-preview" *ngIf="selectedImageUrl">
+            <img
+              [src]="selectedImageUrl"
+              alt="Property preview"
+              class="preview-image"
+            />
+            <button type="button" class="remove-image" (click)="removeImage()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div
+            class="upload-placeholder"
+            *ngIf="!selectedImageUrl"
+            (click)="fileInput.click()"
+          >
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p>Click to upload property image</p>
+            <small>Supports: JPG, PNG, GIF (Max: 5MB)</small>
+          </div>
+        </div>
+        <div class="invalid-feedback" *ngIf="isFieldInvalid('propertyImage')">
+          Property image is required
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="description" class="form-label">
+          <i class="fas fa-align-left"></i>
+          Property Description *
+        </label>
+        <textarea
+          id="description"
+          formControlName="propertyDescription"
+          class="form-control"
+          [class.is-invalid]="isFieldInvalid('propertyDescription')"
+          rows="4"
+          placeholder="Describe your property, amenities, nearby attractions..."
+        ></textarea>
+        <div
+          class="invalid-feedback"
+          *ngIf="isFieldInvalid('propertyDescription')"
+        >
+          Property description is required
+        </div>
+        <div class="char-counter">
+          {{ propertyForm.get('propertyDescription')?.value?.length || 0 }}/500
+          characters
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="onCancel()">
+          <i class="fas fa-times"></i>
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="propertyForm.invalid || isSubmitting"
+        >
+          <i class="fas fa-save" *ngIf="!isSubmitting && isEditMode"></i>
+          <i class="fas fa-plus" *ngIf="!isSubmitting && !isEditMode"></i>
+          <i class="fas fa-spinner fa-spin" *ngIf="isSubmitting"></i>
+          {{ isSubmitting ? (isEditMode ? 'Updating...' : 'Adding Property...')
+          : (isEditMode ? 'Update Property' : 'Add Property') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+

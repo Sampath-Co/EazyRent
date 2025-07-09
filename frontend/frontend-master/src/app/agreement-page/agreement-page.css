@@ -1,0 +1,53 @@
+.agreement-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.agreement-container h2 {
+  text-align: center;
+  color: #333;
+}
+
+.agreement-rules {
+  list-style-type: disc;
+  margin: 20px 0;
+  padding-left: 20px;
+  color: #555;
+}
+
+.agreement-actions {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.agreement-actions label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #333;
+}
+
+.agreement-actions button {
+  padding: 10px 20px;
+  font-size: 16px;
+  color: #fff;
+  background-color: #007bff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.agreement-actions button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.agreement-actions button:hover:not(:disabled) {
+  background-color: #0056b3;
+}

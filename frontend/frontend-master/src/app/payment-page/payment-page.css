@@ -1,0 +1,25 @@
+.payment-options {
+  margin: 20px 0;
+}
+
+.payment-options label {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.upi-input, .card-input {
+  margin: 20px 0;
+}
+
+.upi-input label, .card-input label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.upi-input input, .card-input input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}

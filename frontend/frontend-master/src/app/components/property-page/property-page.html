@@ -1,0 +1,16 @@
+<div class="container mt-5">
+  <div *ngIf="property" class="card">
+    <img *ngIf="property.propertyImageBase64" [src]="property.propertyImageBase64" class="card-img-top" alt="Property Image">
+    <div class="card-body">
+      <h5 class="card-title">Property ID: {{ property.propertyId }}</h5>
+      <p class="card-text"><strong>Address:</strong> {{ property.address }}</p>
+      <p class="card-text"><strong>Rent Amount:</strong> ₹{{ property.rentAmount }}</p>
+      <p class="card-text"><strong>Availability Status:</strong> {{ property.availabilityStatus }}</p>
+      <p class="card-text"><strong>Description:</strong> {{ property.propertyDescription }}</p>
+      <button class="btn btn-primary mt-3" (click)="redirectToLeaseForm()">Request Lease</button>
+    </div>
+  </div>
+  <div *ngIf="!property" class="alert alert-warning" role="alert">
+    Property details not available.
+  </div>
+</div>

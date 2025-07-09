@@ -1,0 +1,47 @@
+<div class="container mt-5">
+  <h2 class="mb-4">Create Maintenance Request</h2>
+  <form (ngSubmit)="onSubmit()" [formGroup]="maintenanceForm" class="needs-validation" novalidate>
+    <div class="mb-3">
+      <label for="propertyId" class="form-label">Property ID</label>
+      <input
+        type="number"
+        class="form-control"
+        id="propertyId"
+        formControlName="propertyId"
+        readonly
+      />
+    </div>
+    <div class="mb-3">
+      <label for="tenantId" class="form-label">Tenant ID</label>
+      <input
+        type="number"
+        class="form-control"
+        id="tenantId"
+        formControlName="tenantId"
+        readonly
+      />
+    </div>
+    <div class="mb-3">
+      <label for="issueDescription" class="form-label">Issue Description</label>
+      <textarea
+        class="form-control"
+        id="issueDescription"
+        formControlName="issueDescription"
+        maxlength="500"
+        required
+      ></textarea>
+    </div>
+    <div class="mb-3">
+      <label for="status" class="form-label">Status</label>
+      <input
+        type="text"
+        class="form-control"
+        id="status"
+        formControlName="status"
+        value="Pending"
+        readonly
+      />
+    </div>
+    <button type="submit" class="btn btn-primary">Submit Request</button>
+  </form>
+</div>

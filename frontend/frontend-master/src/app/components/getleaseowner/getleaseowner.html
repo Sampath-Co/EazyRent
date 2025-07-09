@@ -1,0 +1,62 @@
+<app-owner-navbar></app-owner-navbar>
+<div class="container mt-4">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h2 class="mb-0">Leases for Your Properties</h2>
+    </div>
+    <div class="card-body">
+      <table class="table table-hover table-bordered">
+        <thead class="thead-dark">
+          <tr>
+            <th>Tenant Name</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Rent Amount</th>
+            <th>Status</th>
+            <th>Digital Signature</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let lease of leases">
+            <td>{{ lease.tenantName || 'N/A' }}</td>
+            <td>{{ lease.startDate }}</td>
+            <td>{{ lease.endDate }}</td>
+            <td>₹{{ lease.rentAmount }}</td>
+            <td>
+              <span
+              >
+                {{ lease.status }}
+              </span>
+            </td>
+            <td>
+              <img
+                *ngIf="lease.digitalSignature"
+                [src]="lease.digitalSignature"
+                alt="Digital Signature"
+                class="img-thumbnail"
+                style="max-width: 100px; max-height: 100px"
+              />
+            </td>
+            <td>
+              <button
+                *ngIf="lease.status === 'Pending'"
+                (click)="updateLeaseStatus(lease.leaseId, 'Active')"
+                class="btn btn-success btn-sm"
+              >
+                Activate
+              </button>
+              <button
+                *ngIf="lease.status === 'Active'"
+                (click)="updateLeaseStatus(lease.leaseId, 'Terminated')"
+                class="btn btn-danger btn-sm"
+              >
+                Terminate
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

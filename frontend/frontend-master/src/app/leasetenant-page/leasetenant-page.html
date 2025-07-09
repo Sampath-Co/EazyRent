@@ -1,0 +1,54 @@
+<app-tenant-navbar></app-tenant-navbar>
+<div *ngIf="leases.length > 0; else noLeases" class="container mt-4">
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped table-hover">
+      <thead class="thead-dark">
+        <tr>
+          <th>Tenant Name</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+          <th>Rent Amount</th>
+          <th>Status</th>
+          <th>Payment Status</th>
+          <th>Action</th>
+          <th>Maintenance Request</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let lease of leases">
+          <td>{{ lease.tenantName }}</td>
+          <td>{{ lease.startDate | date }}</td>
+          <td>{{ lease.endDate | date }}</td>
+          <td>{{ lease.rentAmount | currency:'INR':'symbol' }}</td>
+          <td>{{ lease.status }}</td>
+          <td>{{ lease.paymentStatus || 'Fetching...' }}</td>
+          <td>
+            <button
+              class="btn btn-primary"
+              [disabled]="lease.status !== 'Active' || lease.paymentStatus === 'Paid'"
+              (click)="navigateToPayment(lease.leaseId, lease.rentAmount)"
+            >
+              Pay Now
+            </button>
+          </td>
+            <td>
+            <button
+              class="btn btn-secondary"
+              [disabled]="lease.status !== 'Active' || lease.paymentStatus !== 'Paid'"
+              (click)="navigateToMaintenance(lease.propertyId,lease.tenantId)"
+            >
+              Request Maintenance
+            </button>
+            </td>
+          
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<ng-template #noLeases>
+  <div class="alert alert-warning text-center mt-4">
+    <p>No leases found.</p>
+  </div>
+</ng-template>

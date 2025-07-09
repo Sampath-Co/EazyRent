@@ -1,0 +1,357 @@
+<app-owner-navbar></app-owner-navbar>
+<!-- owner-dashboard.component.html -->
+<div class="dashboard-container">
+  <!-- Loading Spinner -->
+  <!-- <div *ngIf="isLoading" class="loading-overlay">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div> -->
+
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="container-fluid">
+      <div class="row align-items-center">
+        <div class="col-md-6">
+          <h1 class="dashboard-title">
+            <i class="fas fa-tachometer-alt me-2"></i>
+            Owner Dashboard
+          </h1>
+          <p class="dashboard-subtitle">Welcome back, {{ ownerName }}</p>
+        </div>
+        <div class="col-md-6 text-end">
+          <button class="btn btn-primary me-2" (click)="onAddProperty()">
+            <i class="fas fa-plus me-1"></i>
+            Add Property
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="container-fluid mb-4">
+    <div class="row g-3">
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-home"></i>
+          </div>
+          <div class="stat-content">
+            <h3>{{ dashboardStats.totalProperties }}</h3>
+            <p>Total Properties</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-content">
+            <h3>{{ dashboardStats.activeTenants }}</h3>
+            <p>Active Tenants</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div
+          class="stat-card"
+          (click)="onReviewApplications()"
+          style="cursor: pointer"
+        >
+          <div class="stat-icon">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="stat-content">
+            <h3>{{ pendingLeasesCount }}</h3>
+            <p>Pending Applications</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div
+          class="stat-card"
+          (click)="onViewMaintenanceRequests()"
+          style="cursor: pointer"
+        >
+          <div class="stat-icon">
+            <i class="fas fa-tools"></i>
+          </div>
+          <div class="stat-content">
+            <h3>{{ maintenanceRequestsCount }}</h3>
+            <p>Maintenance Requests</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Properties Section -->
+      <div class="col-lg-8 mb-4">
+        <div class="dashboard-card">
+          <div class="card-header">
+            <h5>My Properties</h5>
+            <button
+              class="btn btn-sm btn-primary"
+              (click)="onViewAllProperties()"
+            >
+              View All ({{ properties.length }})
+            </button>
+          </div>
+          <div class="card-body">
+            <div *ngIf="recentProperties.length === 0" class="text-center py-4">
+              <i class="fas fa-home fa-3x text-muted mb-3"></i>
+              <p class="text-muted">
+                No properties found. Add your first property!
+              </p>
+              <button class="btn btn-primary" (click)="onAddProperty()">
+                <i class="fas fa-plus me-1"></i>
+                Add Property
+              </button>
+            </div>
+
+            <div
+              *ngFor="let property of recentProperties"
+              class="property-item"
+            >
+              <div class="property-info">
+                <p class="text-muted small">
+                  {{ formatCurrency(property.rentAmount) }}/month •
+                  <span
+                    [class]="getStatusBadgeClass(property.availabilityStatus)"
+                  >
+                    {{ property.availabilityStatus }}
+                  </span>
+                </p>
+                <small class="text-muted">
+                  <span *ngIf="property.propertyDescription"
+                    >{{ property.propertyDescription }}</span
+                  >
+                </small>
+              </div>
+              <div class="property-actions">
+                <button
+                  class="btn btn-sm btn-outline-primary"
+                  (click)="onEditProperty(property.propertyID)"
+                >
+                  <i class="fas fa-edit"></i> Edit
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="col-lg-4 mb-4">
+        <div class="dashboard-card">
+          <div class="card-header">
+            <h5>Quick Actions</h5>
+          </div>
+          <div class="card-body">
+            <div class="d-grid gap-2">
+              <button
+                class="btn btn-outline-primary"
+                (click)="onReviewApplications()"
+                [disabled]="dashboardStats.pendingApplications === 0"
+              >
+                <i class="fas fa-file-alt me-2"></i>
+                Review Applications ({{ dashboardStats.pendingApplications }})
+              </button>
+              <button
+                class="btn btn-outline-warning"
+                (click)="onViewMaintenanceRequests()"
+                [disabled]="dashboardStats.maintenanceRequests === 0"
+              >
+                <i class="fas fa-wrench me-2"></i>
+                Maintenance Requests ({{ dashboardStats.maintenanceRequests }})
+              </button>
+              <button
+                class="btn btn-outline-success"
+                (click)="onViewPaymentHistory()"
+              >
+                <i class="fas fa-dollar-sign me-2"></i>
+                Payment History
+              </button>
+              <button class="btn btn-outline-info" (click)="onViewReports()">
+                <i class="fas fa-chart-bar me-2"></i>
+                Reports
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending Applications Card -->
+        <div class="dashboard-card mt-3" *ngIf="pendingApplications.length > 0">
+          <div class="card-header">
+            <h6>Recent Applications</h6>
+          </div>
+          <div class="card-body">
+            <div
+              *ngFor="let application of pendingApplications.slice(0, 3)"
+              class="application-item"
+            >
+              <div class="application-info">
+                <p class="mb-1">
+                  <strong
+                    >{{ application.tenant?.fullName || 'Unknown Tenant'
+                    }}</strong
+                  >
+                </p>
+              </div>
+              <div class="application-actions">
+                <button
+                  class="btn btn-sm btn-success me-1"
+                  (click)="onApproveApplication(application.applicationId)"
+                >
+                  <i class="fas fa-check"></i>
+                </button>
+                <button
+                  class="btn btn-sm btn-danger"
+                  (click)="onRejectApplication(application.applicationId)"
+                >
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity and Maintenance Requests -->
+    <div class="row">
+      <div class="col-lg-6 mb-4">
+        <div class="dashboard-card">
+          <div class="card-header">
+            <h5>Recent Activity</h5>
+          </div>
+          <div class="card-body">
+            <div *ngIf="recentActivities.length === 0" class="text-center py-3">
+              <p class="text-muted">No recent activity</p>
+            </div>
+
+            <div
+              *ngFor="let activity of recentActivities.slice(0, 5)"
+              class="activity-item"
+            >
+              <div class="activity-icon">
+                <i [class]="activity.icon + ' ' + activity.iconColor"></i>
+              </div>
+              <div class="activity-content">
+                <p [innerHTML]="activity.message"></p>
+                <small class="text-muted"
+                  >{{ getTimeAgo(activity.timestamp) }}</small
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Maintenance Requests -->
+      <div class="col-lg-6 mb-4">
+        <div class="dashboard-card">
+          <div class="card-header">
+            <h5>Maintenance Requests</h5>
+            <button
+              class="btn btn-sm btn-outline-primary"
+              (click)="onViewMaintenanceRequests()"
+              *ngIf="maintenanceRequests.length > 0"
+            >
+              View All
+            </button>
+          </div>
+          <div class="card-body">
+            <div
+              *ngIf="maintenanceRequests.length === 0"
+              class="text-center py-3"
+            >
+              <i class="fas fa-tools fa-2x text-muted mb-2"></i>
+              <p class="text-muted">No pending maintenance requests</p>
+            </div>
+
+            <div
+              *ngFor="let request of maintenanceRequests.slice(0, 4)"
+              class="maintenance-item"
+            >
+              <div class="maintenance-info">
+                <p class="text-muted small mb-1">
+                  {{ request.issueDescription }}
+                </p>
+                <div class="d-flex align-items-center gap-2">
+                  <span
+                    *ngIf="request.priority"
+                    [class]="getPriorityBadgeClass(request.priority)"
+                  >
+                    {{ request.priority }} Priority
+                  </span>
+                  <small *ngIf="request.createdDate" class="text-muted"
+                    >{{ formatDate(request.createdDate) }}</small
+                  >
+                  <small
+                    *ngIf="!request.createdDate && request.tenant"
+                    class="text-muted"
+                    >By: {{ request.tenant.fullName }}</small
+                  >
+                </div>
+              </div>
+              <div class="maintenance-actions">
+                <div class="dropdown">
+                  <button
+                    class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                    type="button"
+                    [id]="'maintenanceDropdown' + request.requestID"
+                    data-bs-toggle="dropdown"
+                  >
+                    Action
+                  </button>
+                  <ul
+                    class="dropdown-menu"
+                    [attr.aria-labelledby]="'maintenanceDropdown' + request.requestID"
+                  >
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        (click)="onUpdateMaintenanceStatus(request.requestID, 'In Progress')"
+                      >
+                        <i class="fas fa-play text-warning me-2"></i>
+                        Mark In Progress
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        (click)="onUpdateMaintenanceStatus(request.requestID, 'Completed')"
+                      >
+                        <i class="fas fa-check text-success me-2"></i>
+                        Mark Completed
+                      </a>
+                    </li>
+                    <li>
+                      <hr class="dropdown-divider" />
+                    </li>
+                    <li>
+                      <a
+                        class="dropdown-item text-danger"
+                        (click)="onUpdateMaintenanceStatus(request.requestID, 'Rejected')"
+                      >
+                        <i class="fas fa-times me-2"></i>
+                        Reject Request
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- <button type="button" class="btn btn-danger mt-3" (click)="logout()">Logout</button> -->
